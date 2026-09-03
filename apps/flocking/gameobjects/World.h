@@ -9,6 +9,10 @@
 #include <memory>
 #include <vector>
 
+//Forward declaed only the pointers are stored here and the ownership stays with the boid rules
+class LeaderFollowRule;
+class ObstacleAvoidanceRule;
+
 class FlockingManager {
 private:
   ecs::World& ecs_;
@@ -28,6 +32,10 @@ private:
   std::vector<std::unique_ptr<FlockingRule>> boidsRules;
   std::vector<float> defaultWeights;
   std::vector<ecs::Entity> boidEntities;
+
+  //things that are not owning for pointers specific rules like flockingmanager needs to drive and with each frame with inputs
+  LeaderFollowRule* leaderFollowRule = nullptr;
+  ObstacleAvoidanceRule* obstacleRule = nullptr;
 
   void initializeRules();
   void setNumberOfBoids(int number);

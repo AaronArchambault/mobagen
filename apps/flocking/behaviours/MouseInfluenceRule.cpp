@@ -9,6 +9,16 @@ glm::vec2 MouseInfluenceRule::computeForce(const std::vector<BoidView>& neighbor
   // glm::length(vec) returns the length of a vector
 
   // begin solution
+  if (ImGui::IsMouseDown(ImGuiMouseButton_Left))
+  {
+    ImVec2 mousePos = ImGui::GetMousePos();
+    glm::vec2 toMouse = glm::vec2(mousePos.x, mousePos.y) - boid.position;
+
+    if (glm::length(toMouse) > 0.0001f)
+    {
+      force =  isRepulsive ? -toMouse : toMouse;
+    }
+  }
 
   // end solution
 

@@ -28,7 +28,11 @@ file(
 
 install(FILES ${FLOCKING_INC} DESTINATION include/flocking)
 
-add_executable(flocking ${FLOCKING_SRC} ${FLOCKING_INC})
+add_executable(flocking ${FLOCKING_SRC} ${FLOCKING_INC}
+        behaviours/ObstacleAvoidanceRule.cpp
+        behaviours/ObstacleAvoidanceRule.h
+        behaviours/LeaderFollowRule.cpp
+        behaviours/LeaderFollowRule.h)
 
 target_include_directories(flocking PUBLIC ${CORE_INC_DIR})
 target_link_libraries(flocking PUBLIC core)

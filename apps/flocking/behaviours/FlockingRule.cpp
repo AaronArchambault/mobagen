@@ -3,11 +3,13 @@
 #include "imgui.h"
 #include <glm/glm.hpp>
 
-//
-//
-//
+//Possilbe fix the member initializers must be listed in declarations order (debugColor,weight, isEnabled), otherwise
+//the compiler intializes them int hat order anyway and emits a warning for the mismatch. The orginal list
+//was (weight, debugColor, isEnabled) harmless here since none of the iniliazesers depend on eachother, but might be worht cleaning
 
-FlockingRule::FlockingRule(const FlockingRule& toCopy) : weight(toCopy.weight), debugColor(toCopy.debugColor), isEnabled(toCopy.isEnabled) {}
+
+//FlockingRule::FlockingRule(const FlockingRule& toCopy) : weight(toCopy.weight), debugColor(toCopy.debugColor), isEnabled(toCopy.isEnabled) {}
+FlockingRule::FlockingRule(const FlockingRule& toCopy) : debugColor(toCopy.debugColor), weight(toCopy.weight), isEnabled(toCopy.isEnabled) {}
 
 glm::vec2 FlockingRule::computeWeightedForce(const std::vector<BoidView>& neighborhood, const BoidView& boid) {
   if (isEnabled) {

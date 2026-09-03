@@ -9,10 +9,15 @@
 #include "../behaviours/MouseInfluenceRule.h"
 #include "../behaviours/BoundedAreaRule.h"
 #include "../behaviours/WindRule.h"
+#include "../behaviours/ObstacleAvoidanceRule.h"
+#include "../behaviours/LeaderFollowRule.h"
+#include "RmlUi/Core/Containers/robin_hood.h"
 
 #include <glm/glm.hpp>
 #include <algorithm>
 #include <cmath>
+#include <cstdint>
+#include <unordered_map>
 
 #if defined(_WIN32)
 #  include "Windows.h"
@@ -28,6 +33,15 @@ void FlockingManager::initializeRules() {
   boidsRules.emplace_back(std::make_unique<MouseInfluenceRule>(2.f));
   boidsRules.emplace_back(std::make_unique<BoundedAreaRule>(20, 8.f, false));
   boidsRules.emplace_back(std::make_unique<WindRule>(1.f, 6.f, false));
+
+  //other bonus rules
+  auto obstacleUnique = std::make_unique<ObstacleAvoidanceRule>(6.f);
+  obstacleRule =obstacleUnique.get();
+  boidsRules.emplace_back(std::move(obstacleUnique));
+
+  auto leaderUnique = std::make_unique<LeaderFollowRule>(1.5f, false);  // starts disabled, toggle in UI
+  leaderFollowRule = leaderUnique.get();
+  boidsRules.emplace_back(std::move(leaderUnique));
 
   defaultWeights.clear();
   for (const auto& rule : boidsRules) defaultWeights.push_back(rule->weight);
@@ -113,6 +127,21 @@ void FlockingManager::Update(float deltaTime) {
     snapshot[i].velocity = ecs_.get<BoidVel>(boidEntities[i]).vel;
   }
 
+
+
+  //for bonus place/remove obstcles with right click nad it handed once per frame here rather than in the compute force
+  if (obstacleRule && !ImGui::GetIO().WantCaptureMouse && ImGui::IsMouseClicked(ImGuiMouseButton_Right)) {
+    ImVec2 mp = ImGui::GetIO().MousePos;
+    obstacleRule->handleRightClick(glm::vec2(mp.x, mp.y));
+  }
+
+  //for bonus the feed boid 0's current state to the leader-follow rule.
+  if (leaderFollowRule) {
+    leaderFollowRule->setLeaderState(snapshot[0].position, snapshot[0].velocity);
+  }
+
+
+
   glm::vec2 inputArrow(0.f);
   if (ImGui::IsKeyDown(ImGuiKey_UpArrow)) inputArrow.y -= 1.f;
   if (ImGui::IsKeyDown(ImGuiKey_DownArrow)) inputArrow.y += 1.f;
@@ -124,7 +153,8 @@ void FlockingManager::Update(float deltaTime) {
     ecs_.get<BoidDebug>(boidEntities[0]).color = Color::Red;
   }
 
-  const auto& rules = boidsRules;
+
+const auto& rules = boidsRules;
   jobs::WaitGroup wg;
   sched_.parallel_for(
       static_cast<std::size_t>(n), 16,
@@ -147,6 +177,11 @@ void FlockingManager::Update(float deltaTime) {
 
           fc.forces.resize(rules.size());
           for (std::size_t ri = 0; ri < rules.size(); ri++) {
+            // Boid 0 is the leader: it shouldn't be pulled toward a point behind itself.
+            if (i == 0 && rules[ri].get() == static_cast<FlockingRule*>(leaderFollowRule)) {
+              fc.forces[ri] = glm::vec2(0.f);
+              continue;
+            }
             glm::vec2 f = rules[ri]->computeWeightedForce(neighborhood, snapshot[i]);
             fc.forces[ri] = f;
             acc.acc += f;
@@ -206,7 +241,7 @@ void FlockingManager::OnDraw() {
     }
 
     if (showAcceleration || dbg.drawAcceleration) {
-      glm::vec2 end = p + acc.prevAcc * 0.08f;
+      glm::vec2 end = p + acc.prevAcc * 2.f;
       dl->AddLine({p.x, p.y}, {end.x, end.y}, IM_COL32(128, 0, 128, 220), 1.5f);
     }
 
