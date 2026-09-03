@@ -3,6 +3,10 @@
 #include "imgui.h"
 #include <glm/glm.hpp>
 
+//
+//
+//
+
 FlockingRule::FlockingRule(const FlockingRule& toCopy) : weight(toCopy.weight), debugColor(toCopy.debugColor), isEnabled(toCopy.isEnabled) {}
 
 glm::vec2 FlockingRule::computeWeightedForce(const std::vector<BoidView>& neighborhood, const BoidView& boid) {

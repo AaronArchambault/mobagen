@@ -6,9 +6,32 @@
 glm::vec2 BoundedAreaRule::computeForce(const std::vector<BoidView>& neighborhood, const BoidView& boid) {
   glm::vec2 force(0.f);
   ImVec2 displaySize = ImGui::GetIO().DisplaySize;
-  // desiredDistance is the distance from the borders that the boids should try to maintain. 
+  // desiredDistance is the distance from the borders that the boids should try to maintain.
 
   // begin solution
+  float w = displaySize.x > 0.f ? displaySize.x : 1280.f;
+  float h = displaySize.y > 0.f ? displaySize.y : 800.f;
+  float d = static_cast<float>(desiredDistance);
+
+  //the closer the boid is to a border, the stronger the pushback toawrds it and its center should be and
+  //it should be proportional to the pentration depth.
+  if (boid.position.x < d)
+  {
+    force.x += (d - boid.position.x);
+  }
+  else if (boid.position.x > w - d)
+  {
+    force.x -= (boid.position.x - (w - d));
+  }
+
+  if (boid.position.y < d)
+  {
+    force.y += (d - boid.position.y);
+  }
+  else if (boid.position.y > h - d)
+  {
+    force.y -= (boid.position.y - (h - d));
+  }
 
   // end solution
 
