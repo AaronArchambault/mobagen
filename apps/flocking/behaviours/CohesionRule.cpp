@@ -21,9 +21,14 @@ glm::vec2 CohesionRule::computeForce(const std::vector<BoidView>& neighborhood, 
 
   centerOfMass /= static_cast<float>(neighborhood.size());
 
-  //the vector pointing form the boid to the center of mass its own magnitude grows straight with around the distance to it center of mass
-  cohesionForce = centerOfMass - boid.position;
+  //it goes towards the center of mass with the same magnitude and does nto grow with distance
+  glm::vec2 toCenter = centerOfMass - boid.position;
+  float distance = glm::length(toCenter);
 
+  if (distance > 0.0001f)
+  {
+    cohesionForce = toCenter / distance;
+  }
 
   // end solution
 

@@ -23,7 +23,10 @@ glm::vec2 LeaderFollowRule::computeForce(const std::vector<BoidView>& neighborho
   float speed = glm::length(leaderVelocity);
   glm::vec2 forward = speed > 0.0001f ? leaderVelocity / speed : glm::vec2(0.f, -1.f);
   glm::vec2 targetPoint = leaderPosition - forward * followDistance;
-  return targetPoint - boid.position;
+
+  glm::vec2 toTarget = targetPoint - boid.position;
+  float distance = glm::length(toTarget);
+  return distance > 0.0001f ? toTarget / distance : glm::vec2(0.0f);
 }
 
 bool LeaderFollowRule::drawImguiRuleExtra()

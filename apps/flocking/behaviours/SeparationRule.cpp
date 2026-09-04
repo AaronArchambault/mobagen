@@ -16,9 +16,10 @@ for (const auto& other : neighborhood)
   glm::vec2 awayFromOther = boid.position - other.position;
   float distance = glm::length(awayFromOther);
 
-  if (distance > 0.0001f && distance < desiredMinimalDistance)
+  //if (distance > 0.0001f && distance < desiredMinimalDistance)
+  if (distance > 0.0001f)
   {
-    glm::vec2 direction = glm::normalize(awayFromOther);
+    glm::vec2 direction = awayFromOther / distance;
     separatingForce += direction * (desiredMinimalDistance / distance);
   }
 }

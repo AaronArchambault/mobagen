@@ -36,10 +36,10 @@ void FlockingManager::initializeRules() {
 
   //other bonus rules
   auto obstacleUnique = std::make_unique<ObstacleAvoidanceRule>(6.f);
-  obstacleRule =obstacleUnique.get();
+  obstacleRule = obstacleUnique.get();
   boidsRules.emplace_back(std::move(obstacleUnique));
 
-  auto leaderUnique = std::make_unique<LeaderFollowRule>(1.5f, false);  // starts disabled, toggle in UI
+  auto leaderUnique = std::make_unique<LeaderFollowRule>(10.1f, false);  // starts disabled, toggle in UI
   leaderFollowRule = leaderUnique.get();
   boidsRules.emplace_back(std::move(leaderUnique));
 
@@ -147,8 +147,9 @@ void FlockingManager::Update(float deltaTime) {
   if (ImGui::IsKeyDown(ImGuiKey_DownArrow)) inputArrow.y += 1.f;
   if (ImGui::IsKeyDown(ImGuiKey_LeftArrow)) inputArrow.x -= 1.f;
   if (ImGui::IsKeyDown(ImGuiKey_RightArrow)) inputArrow.x += 1.f;
-  if (glm::length(inputArrow) > 0.f) {
-    ecs_.get<BoidAcc>(boidEntities[0]).acc += inputArrow * 20.f;
+  if (glm::length(inputArrow) > 0.f)
+  {
+    ecs_.get<BoidVel>(boidEntities[0]).vel = glm::normalize(inputArrow) * desiredSpeed;
     ecs_.get<BoidDebug>(boidEntities[0]).drawDebugRadius = true;
     ecs_.get<BoidDebug>(boidEntities[0]).color = Color::Red;
   }
