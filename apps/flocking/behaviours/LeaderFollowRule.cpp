@@ -14,8 +14,8 @@ void LeaderFollowRule::setLeaderState(glm::vec2 position, glm::vec2 velocity)
 }
 
 glm::vec2 LeaderFollowRule::computeForce(const std::vector<BoidView>& neighborhood, const BoidView& boid)
-{
-  if (!hasLeader)
+// {
+//   if (!hasLeader)
   {
     return glm::vec2(0.0f);
   }

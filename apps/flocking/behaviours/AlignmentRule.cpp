@@ -18,7 +18,6 @@ glm::vec2 AlignmentRule::computeForce(const std::vector<BoidView>& neighborhood,
 
   averageVelocity /= static_cast<float>(neighborhood.size());
 
-
   return averageVelocity;
   // end solution
 }
