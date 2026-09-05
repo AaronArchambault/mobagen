@@ -6,11 +6,13 @@ glm::vec2 AlignmentRule::computeForce(const std::vector<BoidView>& neighborhood,
   // glm::vec2 can be divided by a float, which will divide each component of the vector by that float.
 
   // begin solution
+  //if there is nobody around, there is nothing to align to, so just go with zero force
   if (neighborhood.empty())
   {
     return averageVelocity;
   }
-
+  
+  //sum up every neighbor's velocity so we can average them
   for (const auto& other : neighborhood)
   {
     averageVelocity += other.velocity;

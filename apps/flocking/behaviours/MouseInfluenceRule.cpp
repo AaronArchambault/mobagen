@@ -9,11 +9,15 @@ glm::vec2 MouseInfluenceRule::computeForce(const std::vector<BoidView>& neighbor
   // glm::length(vec) returns the length of a vector
 
   // begin solution
+  //it only adds it while the button is held down as soon as you let go, this force
+  //stops adding entirely
   if (ImGui::IsMouseDown(ImGuiMouseButton_Left))
   {
     ImVec2 mousePos = ImGui::GetMousePos();
     glm::vec2 toMouse = glm::vec2(mousePos.x, mousePos.y) - boid.position;
 
+    //A protection against the boid being exactly on top of the cursor, where the direction
+    // would be undefined
     if (glm::length(toMouse) > 0.0001f)
     {
       force =  isRepulsive ? -toMouse : toMouse;

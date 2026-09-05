@@ -14,7 +14,9 @@ glm::vec2 BoundedAreaRule::computeForce(const std::vector<BoidView>& neighborhoo
   float d = static_cast<float>(desiredDistance);
 
   //the closer the boid is to a border, the stronger the pushback toawrds it and its center should be and
-  //it should be proportional to the pentration depth.
+  //it should be proportional to the pentration depth and that said a boid barely inside the margin gets a tiny
+  // nudge, and one that's basically touching the wall gets shoved back hard. each axis is handled
+  // independently since a boid could be close to a horizontal border, a vertical one, or both at once
   if (boid.position.x < d)
   {
     force.x += (d - boid.position.x);

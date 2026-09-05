@@ -8,11 +8,13 @@ glm::vec2 CohesionRule::computeForce(const std::vector<BoidView>& neighborhood, 
   // glm::normalize(vec) returns the normalized vector (length 1) in the same direction as vec.
 
   // begin solution
+  //no neighbors means that their is no group to be pulled towards, so nothing should really be done
   if (neighborhood.empty())
   {
     return cohesionForce;
   }
 
+  //average every neighbor's position together to find the "middle" of the local group
   glm::vec2 centerOfMass(0.f);
   for (const auto& other : neighborhood)
   {
