@@ -23,7 +23,10 @@ class Underpopulation : public Condition {
 public:
   bool Test(const AgentContext& context) override {
     // todo: implement the underpopulation condition
-    throw std::logic_error("Underpopulation condition not implemented yet");
+    //A live cell with fewer than two live neighboots dies
+    return context.isAlive && context.aliveNeighbors < 2;
+
+   // throw std::logic_error("Underpopulation condition not implemented yet");
   }
 };
 
@@ -31,7 +34,10 @@ class Overpopulation : public Condition {
 public:
   bool Test(const AgentContext& context) override {
     // todo: implement the overpopulation condition
-    throw std::logic_error("Overpopulation condition not implemented yet");
+    //A live cell with more than three live neighboors dies
+    return context.isAlive && context.aliveNeighbors > 3;
+
+   // throw std::logic_error("Overpopulation condition not implemented yet");
   }
 };
 
@@ -39,7 +45,9 @@ class Reproduction : public Condition {
 public:
   bool Test(const AgentContext& context) override {
     // todo: implement the reproduction condition
-    throw std::logic_error("Reproduction condition not implemented yet");
+    //A dead cell with exactly three neighboors becomes alive
+    return !context.isAlive && context.aliveNeighbors == 3;
+  //  throw std::logic_error("Reproduction condition not implemented yet");
   }
 };
 
@@ -47,10 +55,11 @@ class DieAction : public Action {
 public:
   void Execute(const AgentContext& context) override {
     // todo: implement the die action,
+    context.world.SetNext(context.position, false);
     // hint:
     //   use the context.world.SetNext() to set the next state of the cell to dead
     //   use the context.position to get the current cell's position
-    throw std::logic_error("Die action not implemented yet");
+   // throw std::logic_error("Die action not implemented yet");
   }
 };
 
@@ -58,7 +67,8 @@ class BornAction : public Action {
 public:
   void Execute(const AgentContext& context) override {
     // see hints in DieAction
-    throw std::logic_error("Born action not implemented yet");
+    context.world.SetNext(context.position, true);
+   // throw std::logic_error("Born action not implemented yet");
   }
 };
 
@@ -66,7 +76,8 @@ class StayAliveAction : public Action {
 public:
   void Execute(const AgentContext& context) override {
     // see hints in DieAction
-    throw std::logic_error("StayAlive action not implemented yet");
+    context.world.SetNext(context.position, true);
+   // throw std::logic_error("StayAlive action not implemented yet");
   }
 };
 
@@ -74,7 +85,8 @@ class StayDeadAction : public Action {
 public:
   void Execute(const AgentContext& context) override {
     // see hints in DieAction
-    throw std::logic_error("StayDead action not implemented yet");
+    context.world.SetNext(context.position, false);
+   // throw std::logic_error("StayDead action not implemented yet");
   }
 };
 
@@ -92,9 +104,16 @@ JohnConway::JohnConway() {
   //   dead->AddAction(std::make_shared<StayDeadAction>());
 
   // begin solution
+  alive->AddTransition(std::make_shared<Underpopulation>(), dead, {die});
+  alive->AddTransition(std::make_shared<Overpopulation>(), dead, {die});
+  alive->AddAction(std::make_shared<StayAliveAction>());
+
+  dead->AddTransition(std::make_shared<Reproduction>(), alive, {born});
+  dead->AddAction(std::make_shared<StayDeadAction>());
   // note: log instead of throw - the constructor runs at app startup and at
   // every fixture load; throwing here would kill the process before it runs.
-  SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "JohnConway: transitions and actions for alive and dead states not implemented yet");
+
+  //SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "JohnConway: transitions and actions for alive and dead states not implemented yet");
 
   // end solution
 }
@@ -128,8 +147,19 @@ int JohnConway::CountNeighbors(World& world, Point2D point) {
   //   a square cell has 8 neighbors, one per dx/dy in {-1, 0, 1}, excluding itself
   //   world.Get({point.x + dx, point.y + dy}) wraps around the borders (toroidal)
   // begin solution
+  int count = 0;
+  for (int dy = -1; dy <= 1; ++dy)
+    {
+    for (int dx = -1; dx <= 1; ++dx)
+      {
+      if (dx == 0 && dy == 0) continue;
+      if (world.Get({point.x + dx, point.y + dy})) ++count;
+      }
+    }
+  return count;
 
-  throw std::logic_error("CountNeighbors not implemented yet");
+
+  //throw std::logic_error("CountNeighbors not implemented yet");
 
   // end solution
 }
