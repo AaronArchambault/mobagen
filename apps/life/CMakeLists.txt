@@ -22,7 +22,11 @@ file(
 
 install(FILES ${LIFE_INC} DESTINATION include/life)
 
-add_executable(life ${LIFE_SRC} ${LIFE_INC})
+add_executable(life ${LIFE_SRC} ${LIFE_INC}
+        rules/HighLife.cpp
+        rules/HighLife.h
+        rules/Seeds.cpp
+        rules/Seeds.h)
 
 target_link_libraries(life PUBLIC core)
 

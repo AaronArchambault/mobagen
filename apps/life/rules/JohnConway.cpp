@@ -114,7 +114,6 @@ JohnConway::JohnConway() {
   // every fixture load; throwing here would kill the process before it runs.
 
   //SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "JohnConway: transitions and actions for alive and dead states not implemented yet");
-
   // end solution
 }
 
@@ -157,7 +156,6 @@ int JohnConway::CountNeighbors(World& world, Point2D point) {
       }
     }
   return count;
-
 
   //throw std::logic_error("CountNeighbors not implemented yet");
 
