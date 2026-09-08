@@ -149,14 +149,14 @@ void Manager::OnGui() {
       index = mousePositionToIndex(mousePos);
     }
 
-    // std::cout << "(" << index.x << "," << index.y << ")" << std::endl;
+    //std::cout << "(" << index.x << "," << index.y << ")" << std::endl;
 
     if (lastIndexClicked != index) {
       lastIndexClicked = index;
-      // std::cout << "MatrixPos: (" << index.x << "," << index.y << ")" << std::endl;
+      //std::cout << "MatrixPos: (" << index.x << "," << index.y << ")" << std::endl;
       if (index.x >= 0 && index.x < sideSize && index.y >= 0 && index.y < sideSize) {
-        world.SetCurrent(index, !world.Get(index));  // to be visible
-        world.SetNext(index, !world.Get(index));     // to be used next time
+        world.SetCurrent(index, !world.Get(index));  //to be visible
+        world.SetNext(index, !world.Get(index));     //to be used next time
       }
     }
   }
@@ -179,7 +179,7 @@ void Manager::OnDraw() {
   float squareSide = minDimension / sideSize;
   float sideSideOver2 = sideSize / 2.0f;
 
-  //High-contrast palette vivid live cells, dark dead ones, no borders -
+  //High-contrast palette vivid live cells, dark dead ones, no borders
   //cells are exactly sized so they tile edge to edge.
   const ImU32 liveFill = IM_COL32(120, 215, 60, 255);
   const ImU32 deadFill = IM_COL32(28, 28, 34, 255);

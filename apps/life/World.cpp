@@ -61,8 +61,8 @@ void World::Randomize() {
 
   for (int i = 0; i < buffer[0].size(); i++) buffer[1][i] = buffer[0][i];
 
-  // Bonus: clear the extra channel on randomize so a leftover "Dying" flag
-  // from a previous Brian's Brain run can't bleed into a fresh board.
+  //it is for the bonus it clear the extra channel on randomize so a leftover "Dying" flag
+  //from a previous Brian's Brain run can't bleed into a fresh board
   for (auto&& elem : extraBuffer[0]) elem = false;
   for (int i = 0; i < extraBuffer[0].size(); i++) extraBuffer[1][i] = false;
 }
@@ -99,7 +99,7 @@ void World::SetCurrentExtra(Point2D point, bool value) {
   extraBuffer[currentBufferId % 2][index] = value;
 }
 
-// --- Bonus: snapshot / restore for undo ------------------------------------
+//for the bonus snapshot/restore for undo
 std::vector<bool> World::Snapshot() { return buffer[currentBufferId % 2]; }
 std::vector<bool> World::SnapshotExtra() { return extraBuffer[currentBufferId % 2]; }
 void World::LoadSnapshot(const std::vector<bool>& mainSnapshot, const std::vector<bool>& extraSnapshot) {

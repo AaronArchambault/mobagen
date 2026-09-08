@@ -6,7 +6,7 @@
 
 struct World {
 private:
-  // double buffer approach to avoid memory reallocation
+  //double buffer approach to avoid memory reallocation
   std::vector<bool> buffer[2];
   std::vector<bool> extraBuffer[2];
   int currentBufferId;
@@ -18,9 +18,9 @@ private:
 public:
   inline const int& Width() const { return width; };
   inline const int& Height() const { return height; };
-  // square grids (visual app)
+  //square grids (visual app)
   void Resize(int sideSize);
-  // rectangular grids (formal tests): C columns x L lines
+  //rectangular grids (formal tests): C columns x L lines
   void Resize(int columns, int lines);
   //flips the buffers, promoting the next generation to current. Called by
   //whoever drives the simulation (the demo app's Manager::step or the
