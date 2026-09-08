@@ -21,6 +21,16 @@ private:
   int ruleId = 0;
   glm::ivec2 mousePositionToIndex(ImVec2& pos);
 
+  //bonus thigns for gerneation count and live population and other things and onk-click for a well known patterns for reapaltade demos
+  int generation = 0;
+  int countAlivePopulation();
+  void loadGliderPreset();
+  bool showHeatmap = false;
+  static constexpr int kMaxHistorySteps = 200;
+  std::vector<std::pair<::std::vector<bool>, std::vector<bool>>> history;
+  void pushHistory();
+  void popHistory();
+
 public:
   Manager();
   ~Manager();

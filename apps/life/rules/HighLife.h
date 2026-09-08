@@ -20,7 +20,7 @@ class HighLife : public RuleBase {
 public:
   HighLife();
   ~HighLife() override = default;
-  std::string getName() override { return "HighLife (B36/S23)"; }
+  std::string GetName() override { return "HighLife (B36/S23)"; }
   void Step(World& world) override;
   int CountNeighbors(World& world, Point2D point);
   GameOfLifeTileSetEnum GetTileSet() override { return GameOfLifeTileSetEnum::Square; };

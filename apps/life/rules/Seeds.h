@@ -22,10 +22,10 @@ class Seeds : public RuleBase {
 public:
   Seeds();
   ~Seeds() override = default;
-  std::string getName() override { return "Seeds (B2/S"; }
+  std::string GetName() override { return "Seeds (B2/S"; }
   void Step(World& world) override;
   int CountNeighbors(World& world, Point2D point);
-  GameOfLifeTileSetEnum GetTileSet() override { return GameOfLifeTileSetEnum::Seeds;};
+  GameOfLifeTileSetEnum GetTileSet() override { return GameOfLifeTileSetEnum::Square;};
 
 private:
   std::shared_ptr<State> alive;
