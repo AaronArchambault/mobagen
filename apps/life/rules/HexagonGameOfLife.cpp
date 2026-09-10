@@ -12,37 +12,37 @@
 #include <stdexcept>
 
 // Hexagonal variant: each cell has 6 neighbors instead of 8. This one is
-// interactive-only (no formal fixtures), so the exact rule is up to you - the
-// classic hex grid plays B2/S34: a dead cell is born with exactly 2 live
-// neighbors, a live cell survives with 3 or 4.
+// interactive-only (no formal fixtures), matched to the reference site's
+// exact rules: https://arunarjunakani.github.io/HexagonalGameOfLife/
+//   - a live cell with 0 or 1 neighbors dies from isolation
+//   - a live cell with 3 or more neighbors dies from overpopulation
+//   - a live cell survives ONLY with exactly 2 neighbors
+//   - a dead cell with exactly 2 neighbors is born
 //
 // hint: the app draws odd rows displaced by half a cell, so the neighbors
 // above and below shift by one column depending on the row parity.
-// Reference: https://arunarjunakani.github.io/HexagonalGameOfLife/
 //
 // The rules as machine parts (same shape as JohnConway):
-//   underpopulation (<3) / overpopulation (>4) -> conditions that leave Alive
-//   reproduction (==2)                          -> condition that leaves Dead
+//   isolation (<2) / overpopulation (>2) -> conditions that leave Alive
+//   reproduction (==2)                    -> condition that leaves Dead
 //   survival is implicit: no transition firing means the stay actions run.
 
 // begin solution
+namespace {
 class Underpopulation : public Condition {
 public:
   bool Test(const AgentContext& context) override {
-    // todo: implement the underpopulation condition
-    //on the hex grid a live cell is underpopulated below 3 neighboors
-    return context.isAlive && context.aliveNeighbors < 3;
-    // hint: on the hex grid (B2/S34) a live cell is underpopulated below 3 neighbors
+    // Isolation: a live cell with 0 or 1 neighbors dies (B2/S2 rule).
+    return context.isAlive && context.aliveNeighbors < 2;
   }
 };
 
 class Overpopulation : public Condition {
 public:
   bool Test(const AgentContext& context) override {
-    // todo: implement the overpopulation condition
-    // hint: on the hex grid (B2/S34) a live cell is overpopulated above 4 neighbors
-    //on the hex grid a live cell is overpopulated above 4 heighbors
-    return context.isAlive && context.aliveNeighbors > 4;
+    // Overpopulation: a live cell with 3 or more neighbors dies (B2/S2 rule) -
+    // this is what makes the cell survive on EXACTLY 2, not a range like 3-4.
+    return context.isAlive && context.aliveNeighbors > 2;
   }
 };
 
@@ -93,6 +93,8 @@ public:
    // throw std::logic_error("StayDead action not implemented yet");
   }
 };
+
+}  // namespace
 
 // end solution
 

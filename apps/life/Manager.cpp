@@ -133,7 +133,7 @@ void Manager::OnGui() {
   ImGui::End();  // end settings
 
   static glm::ivec2 lastIndexClicked = {INT32_MAX, INT32_MAX};
-  
+
   if (ImGui::IsMouseClicked(ImGuiMouseButton_Left) && !ImGui::GetIO().WantCaptureMouse) {
     isDraggingOnCanvas = true;
   }
@@ -249,10 +249,29 @@ void Manager::Update(float deltaTime) {
 }
 
 void Manager::step() {
-  pushHistory();  //bonus snapshot before stepping
+  int before = countAlivePopulation();
+  pushHistory();
   rules[ruleId]->Step(world);
   world.SwapBuffers();
-  ++generation;  //bonus debug counter
+  ++generation;
+  int after = countAlivePopulation();
+
+  std::cout << "[STEP] gen=" << generation
+            << " sideSize(Manager)=" << sideSize
+            << " world.Width()=" << world.Width()
+            << " world.Height()=" << world.Height()
+            << " pop before=" << before
+            << " pop after=" << after
+            << std::endl;
+
+  // Full grid dump, using the SAME loop bounds Manager uses everywhere else
+  for (int y = 0; y < sideSize; ++y) {
+    for (int x = 0; x < sideSize; ++x) {
+      std::cout << (world.Get({x, y}) ? '#' : '.');
+    }
+    std::cout << "\n";
+  }
+  std::cout << "----" << std::endl;
 }
 
 Manager::~Manager() {

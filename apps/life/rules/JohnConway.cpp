@@ -19,6 +19,8 @@
 //   - per-update info (position, isAlive, aliveNeighbors) travels in the AgentContext.
 
 // begin solution
+//
+namespace {
 class Underpopulation : public Condition {
 public:
   bool Test(const AgentContext& context) override {
@@ -89,6 +91,8 @@ public:
    // throw std::logic_error("StayDead action not implemented yet");
   }
 };
+
+}  // namespace
 
 // end solution
 
