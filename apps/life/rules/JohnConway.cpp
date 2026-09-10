@@ -130,8 +130,10 @@ void JohnConway::Step(World& world) {
   // Manager::step or the life-tests runner) calls world.SwapBuffers() right
   // AFTER this function returns. Never call SwapBuffers from inside a rule.
   // begin solution
-  for (int y = 0; y < world.Height(); ++y) {
-    for (int x = 0; x < world.Width(); ++x) {
+  for (int y = 0; y < world.Height(); ++y)
+  {
+    for (int x = 0; x < world.Width(); ++x)
+    {
       AgentContext context{world, {x, y}, world.Get({x, y}), CountNeighbors(world, {x, y})};
       machine.SetCurrent(context.isAlive ? alive : dead);
       machine.Update(context);

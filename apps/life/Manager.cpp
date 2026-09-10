@@ -133,20 +133,18 @@ void Manager::OnGui() {
   ImGui::End();  // end settings
 
   static glm::ivec2 lastIndexClicked = {INT32_MAX, INT32_MAX};
-  if (ImGui::IsMouseDown(ImGuiMouseButton_Left)) {
+  
+  if (ImGui::IsMouseClicked(ImGuiMouseButton_Left) && !ImGui::GetIO().WantCaptureMouse) {
+    isDraggingOnCanvas = true;
+  }
+
+  if (isDraggingOnCanvas && ImGui::IsMouseDown(ImGuiMouseButton_Left)) {
     auto mousePos = ImGui::GetMousePos();
     glm::ivec2 index;
     if (rules[ruleId]->GetTileSet() == GameOfLifeTileSetEnum::Square) {
       index = mousePositionToIndex(mousePos);
     } else if (rules[ruleId]->GetTileSet() == GameOfLifeTileSetEnum::Hexagon) {
-      ImVec2 winSize = ImGui::GetIO().DisplaySize;
-      float minDimension = std::min(winSize.x, winSize.y) * 0.99f;
-      float squareSide = minDimension / sideSize;
-      float sideSideOver2 = sideSize / 2.0f;
-      index = mousePositionToIndex(mousePos);
-      float displacement = std::abs(index.y - (int)sideSideOver2) % 2 == 1 ? squareSide / 2.0f : 0.0f;
-      mousePos.x -= displacement;
-      index = mousePositionToIndex(mousePos);
+      index = hexPositionToIndex(mousePos);
     }
 
     //std::cout << "(" << index.x << "," << index.y << ")" << std::endl;
@@ -161,6 +159,7 @@ void Manager::OnGui() {
     }
   }
   if (ImGui::IsMouseReleased(ImGuiMouseButton_Left)) {
+    isDraggingOnCanvas = false;
     lastIndexClicked = {INT32_MAX, INT32_MAX};
   }
 }
@@ -208,12 +207,13 @@ void Manager::OnDraw() {
   } else if (rules[ruleId]->GetTileSet() == GameOfLifeTileSetEnum::Hexagon) {
     //True pointy-top hex tiling  vertices at top and bottom, flat edges left and right. Row parity keeps the same odd-row
     //shift direction the mouse picking uses. The circumradius solves so the grid fits the viewport on both axes
-    const float sqrt3 = 1.7320508f;
-    const float radius = std::min(minDimension / (sqrt3 * (sideSize + 0.5f)), minDimension / (1.5f * (sideSize - 1) + 2.0f));
-    const float width = sqrt3 * radius;    //flat-to-flat, in-row pitch
-    const float rowPitch = 1.5f * radius;  //distance between row centers
-    const float startX = cx - (width * (sideSize + 0.5f)) * 0.5f + width * 0.5f;
-    const float startY = cy - (rowPitch * (sideSize - 1) + 2.0f * radius) * 0.5f + radius;
+    //(computed once in computeHexGeometry() and shared with hexPositionToIndex so draw and click-picking can't drift apart)
+    HexGeometry hexGeom = computeHexGeometry();
+    const float radius = hexGeom.radius;
+    const float width = hexGeom.width;      //flat-to-flat, in-row pitch
+    const float rowPitch = hexGeom.rowPitch;  //distance between row centers
+    const float startX = hexGeom.startX;
+    const float startY = hexGeom.startY;
     for (int l = 0; l < sideSize; l++) {
       float displacement = std::abs(l - (int)sideSideOver2) % 2 == 1 ? width * 0.5f : 0.0f;
       for (int c = 0; c < sideSize; c++) {
@@ -313,9 +313,33 @@ glm::ivec2 Manager::mousePositionToIndex(ImVec2& mousePos) {
   float squareSide = minDimension / sideSize;
 
   glm::vec2 rel(mousePos.x - cx, mousePos.y - cy);
-  rel *= 0.99f;
   rel += glm::vec2(minDimension / 2.0f, minDimension / 2.0f);
   rel /= squareSide;
 
   return glm::ivec2((int)rel.x, (int)rel.y);
+}
+
+Manager::HexGeometry Manager::computeHexGeometry() {
+  ImVec2 winSize = ImGui::GetIO().DisplaySize;
+  float cx = winSize.x * 0.5f;
+  float cy = winSize.y * 0.5f;
+  float minDimension = std::min(winSize.x, winSize.y) * 0.99f;
+  const float sqrt3 = 1.7320508f;
+
+  HexGeometry g{};
+  g.radius = std::min(minDimension / (sqrt3 * (sideSize + 0.5f)), minDimension / (1.5f * (sideSize - 1) + 2.0f));
+  g.width = sqrt3 * g.radius;
+  g.rowPitch = 1.5f * g.radius;
+  g.startX = cx - (g.width * (sideSize + 0.5f)) * 0.5f + g.width * 0.5f;
+  g.startY = cy - (g.rowPitch * (sideSize - 1) + 2.0f * g.radius) * 0.5f + g.radius;
+  g.sideSideOver2 = sideSize / 2.0f;
+  return g;
+}
+
+glm::ivec2 Manager::hexPositionToIndex(ImVec2& mousePos) {
+  HexGeometry g = computeHexGeometry();
+  int l = (int)std::round((mousePos.y - g.startY) / g.rowPitch);
+  float displacement = std::abs(l - (int)g.sideSideOver2) % 2 == 1 ? g.width * 0.5f : 0.0f;
+  int c = (int)std::round((mousePos.x - displacement - g.startX) / g.width);
+  return {c, l};
 }
