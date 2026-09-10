@@ -33,7 +33,6 @@ public:
     //on the hex grid a live cell is underpopulated below 3 neighboors
     return context.isAlive && context.aliveNeighbors < 3;
     // hint: on the hex grid (B2/S34) a live cell is underpopulated below 3 neighbors
-    //throw std::logic_error("Underpopulation condition not implemented yet");
   }
 };
 
@@ -44,7 +43,6 @@ public:
     // hint: on the hex grid (B2/S34) a live cell is overpopulated above 4 neighbors
     //on the hex grid a live cell is overpopulated above 4 heighbors
     return context.isAlive && context.aliveNeighbors > 4;
-    //throw std::logic_error("Overpopulation condition not implemented yet");
   }
 };
 
@@ -55,7 +53,6 @@ public:
     // hint: on the hex grid (B2/S34) a dead cell is born with exactly 2 neighbors
     //on the hex grid a dead cell is born with exsatcly 2 neighboors
     return !context.isAlive && context.aliveNeighbors == 2;
-    //throw std::logic_error("Reproduction condition not implemented yet");
   }
 };
 
@@ -67,7 +64,6 @@ public:
     //   use the context.world.SetNext() to set the next state of the cell to dead
     //   use the context.position to get the current cell's position
     context.world.SetNext(context.position, false);
-   // throw std::logic_error("Die action not implemented yet");
   }
 };
 
@@ -117,9 +113,6 @@ HexagonGameOfLife::HexagonGameOfLife() {
 
   dead->AddTransition(std::make_shared<Reproduction>(), alive, {born});
   dead->AddAction(std::make_shared<StayDeadAction>());
-
-
-  //SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "HexagonGameOfLife: transitions and actions for alive and dead states not implemented yet");
 
   // end solution
 }
@@ -178,6 +171,5 @@ int HexagonGameOfLife::CountNeighbors(World& world, Point2D point) {
   }
   return count;
 
-  //throw std::logic_error("CountNeighbors not implemented yet");
   // end solution
 }
