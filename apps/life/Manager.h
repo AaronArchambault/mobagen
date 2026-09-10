@@ -22,8 +22,8 @@ private:
   glm::ivec2 mousePositionToIndex(ImVec2& pos);
   struct HexGeometry {
     float radius;
-    float width;      // flat-to-flat, in-row pitch
-    float rowPitch;   // distance between row centers
+    float width;      //flat-to-flat, in-row pitch
+    float rowPitch;   //distance between row centers
     float startX;
     float startY;
     float sideSideOver2;

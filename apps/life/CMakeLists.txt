@@ -28,7 +28,9 @@ add_executable(life ${LIFE_SRC} ${LIFE_INC}
         rules/Seeds.cpp
         rules/Seeds.h
         rules/BriansBrain.cpp
-        rules/BriansBrain.h)
+        rules/BriansBrain.h
+        rules/HexagonB34GameOfLife.cpp
+        rules/HexagonB34GameOfLife.h)
 
 target_link_libraries(life PUBLIC core)
 

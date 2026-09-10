@@ -17,7 +17,7 @@ public:
   GameOfLifeTileSetEnum GetTileSet() override { return GameOfLifeTileSetEnum::Hexagon; };
 
 private:
-  // the shared state graph: every cell runs this same machine
+  //the shared state graph: every cell runs this same machine
   std::shared_ptr<State> alive;
   std::shared_ptr<State> dead;
   StateMachine machine;

@@ -10,13 +10,12 @@
 #include "../fsm/StateMachine.h"
 #include <memory>
 #include <string>
-//Bonus Seeds (B2/S - empty survival ruleset). Every live cell dies
+//it is a bonus and it is Seeds (B2/S - empty survival ruleset). Every live cell dies
 //every generation no matter its neighbor count; a dead cell is born with
-//exactly 2 neighbors. This is architecturally interesting: since there is NO
+//exactly 2 neighbors. This is architecturally interesting: since there is no
 //survival condition, "Alive" has a single not conditional transition to "Dead"
-//instead of the usual pair of Underpopulation/Overpopulation guards. It demonstrates that the framework
-// doesn't require states to have any stay behavior at all a state can be
-// purely transient.
+//instead of the usual pair of Underpopulation/Overpopulation guards and it demonstrates that the framework
+//does not require states to have any stay behavior at all a state can be purely transient.
 
 class Seeds : public RuleBase {
 public:

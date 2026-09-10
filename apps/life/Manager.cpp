@@ -1,6 +1,7 @@
 #include "Manager.h"
 #include "rules/JohnConway.h"
 #include "rules/HexagonGameOfLife.h"
+#include "rules/HexagonB34GameOfLife.h"
 #include "rules/HighLife.h"
 #include "rules/Seeds.h"
 #include "rules/BriansBrain.h"
@@ -28,12 +29,13 @@ ImU32 HeatColor(int neighborCount, int maxExpected) {
   }
   return IM_COL32((int)(r * 255), (int)(g * 255), (int)(b * 255), 255);
 }
-}  // namespace
+}  //namespace
 
 Manager::Manager() {
   world.Resize(sideSize);
   rules.push_back(new HexagonGameOfLife());
   rules.push_back(new JohnConway());
+  rules.push_back(new HexagonB34GameOfLife());
   //it is the bonus extra rule variants
   rules.push_back(new HighLife());
   rules.push_back(new Seeds());
@@ -207,7 +209,6 @@ void Manager::OnDraw() {
   } else if (rules[ruleId]->GetTileSet() == GameOfLifeTileSetEnum::Hexagon) {
     //True pointy-top hex tiling  vertices at top and bottom, flat edges left and right. Row parity keeps the same odd-row
     //shift direction the mouse picking uses. The circumradius solves so the grid fits the viewport on both axes
-    //(computed once in computeHexGeometry() and shared with hexPositionToIndex so draw and click-picking can't drift apart)
     HexGeometry hexGeom = computeHexGeometry();
     const float radius = hexGeom.radius;
     const float width = hexGeom.width;      //flat-to-flat, in-row pitch
@@ -249,29 +250,10 @@ void Manager::Update(float deltaTime) {
 }
 
 void Manager::step() {
-  int before = countAlivePopulation();
-  pushHistory();
+  pushHistory();  //bonus snapshot before stepping
   rules[ruleId]->Step(world);
   world.SwapBuffers();
-  ++generation;
-  int after = countAlivePopulation();
-
-  std::cout << "[STEP] gen=" << generation
-            << " sideSize(Manager)=" << sideSize
-            << " world.Width()=" << world.Width()
-            << " world.Height()=" << world.Height()
-            << " pop before=" << before
-            << " pop after=" << after
-            << std::endl;
-
-  // Full grid dump, using the SAME loop bounds Manager uses everywhere else
-  for (int y = 0; y < sideSize; ++y) {
-    for (int x = 0; x < sideSize; ++x) {
-      std::cout << (world.Get({x, y}) ? '#' : '.');
-    }
-    std::cout << "\n";
-  }
-  std::cout << "----" << std::endl;
+  ++generation;  //bonus debug counter
 }
 
 Manager::~Manager() {

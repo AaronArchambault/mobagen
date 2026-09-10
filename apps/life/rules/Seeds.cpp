@@ -6,7 +6,7 @@
 #include "../fsm/Action.h"
 #include "../fsm/AgentContext.h"
 #include "../fsm/Condition.h"
-//Seeds (B2/S): there is no survival rule at all every live cell dies next
+//Seeds (B2/S) there is no survival rule at all every live cell dies next
 //generation regardless of its neighbor count. A dead cell is born with
 //exactly 2 live neighbors. Because "always die" isn't conditioned on
 //anything about the cell's neighborhood, it's modeled as a transition

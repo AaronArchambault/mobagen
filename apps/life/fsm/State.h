@@ -11,19 +11,19 @@
 
 class State;
 
-// A guarded edge of the graph: fires when the condition tests true, moving the
-// agent to the target state. Transition actions run between the exit actions of
-// the source state and the entry actions of the target state.
+//A guarded edge of the graph: fires when the condition tests true, moving the
+//agent to the target state. Transition actions run between the exit actions of
+//the source state and the entry actions of the target state.
 struct Transition {
   std::shared_ptr<Condition> condition;
   std::shared_ptr<State> target;
   std::vector<std::shared_ptr<Action>> actions;
 };
 
-// A node of the graph: what the agent does in this situation, and where it can
-// go next. A State is BEHAVIOR, not storage: it is shared by every cell and
-// holds no per-agent data - which cell is in which state lives in the world
-// grid (one bit per cell), and the per-cell view arrives in the AgentContext.
+//A node of the graph: what the agent does in this situation, and where it can
+//go next. A State is behavoir not storage: it is shared by every cell and
+//holds no per-agent data which cell is in which state lives in the world
+//grid, and the per-cell view arrives in the AgentContext.
 class State {
 public:
   explicit State(std::string name) : name(std::move(name)) {}
@@ -35,7 +35,7 @@ public:
   }
 
   void AddEntryAction(std::shared_ptr<Action> action) { entryActions.push_back(std::move(action)); }
-  // Stay action: runs when no transition fires during an update.
+  //stay action runs when no transition fires during an update.
   void AddAction(std::shared_ptr<Action> action) { stayActions.push_back(std::move(action)); }
   void AddExitAction(std::shared_ptr<Action> action) { exitActions.push_back(std::move(action)); }
 
