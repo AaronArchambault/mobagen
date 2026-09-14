@@ -4,8 +4,8 @@
 #include "AgentContext.h"
 #include <memory>
 
-// A predicate over the agent context. A transition fires when its condition
-// tests true; conditions never write to the world.
+//A predicate over the agent context. A transition fires when its condition
+//tests true; conditions never write to the world.
 class Condition {
 public:
   virtual ~Condition() = default;

@@ -90,7 +90,8 @@ public:
    // throw std::logic_error("StayDead action not implemented yet");
   }
 };
-}  // namespace conway
+
+}  // namespace
 
 // end solution
 
@@ -123,19 +124,16 @@ JohnConway::JohnConway() {
 
 // Reference: https://playgameoflife.com/info
 void JohnConway::Step(World& world) {
-  // relevant functions:
-  //   world.Height() and world.Width() to get the world dimensions,
-  //   world.Get() reads the CURRENT generation, world.SetNext() writes the NEXT one
-  // Build one context per cell and let the machine decide: conditions read the
-  // current generation through the context, actions write the next one.
+  //relevant functions:
+  //world.Height() and world.Width() to get the world dimensions,
+  //world.Get() reads the CURRENT generation, world.SetNext() writes the NEXT one
+  //Build one context per cell and let the machine decide: conditions read the
+  //current generation through the context, actions write the next one.
   //
-  // note: the double buffering does NOT happen here. Your actions only write
-  // the next buffer via SetNext; whoever drives the simulation (the demo app's
-  // Manager::step or the life-tests runner) calls world.SwapBuffers() right
-  // AFTER this function returns. Never call SwapBuffers from inside a rule.
-  // begin solution
-  for (int y = 0; y < world.Height(); ++y) {
-    for (int x = 0; x < world.Width(); ++x) {
+  for (int y = 0; y < world.Height(); ++y)
+  {
+    for (int x = 0; x < world.Width(); ++x)
+    {
       AgentContext context{world, {x, y}, world.Get({x, y}), CountNeighbors(world, {x, y})};
       machine.SetCurrent(context.isAlive ? alive : dead);
       machine.Update(context);

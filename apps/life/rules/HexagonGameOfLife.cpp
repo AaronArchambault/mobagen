@@ -12,40 +12,38 @@
 #include <stdexcept>
 
 // Hexagonal variant: each cell has 6 neighbors instead of 8. This one is
-// interactive-only (no formal fixtures), so the exact rule is up to you - the
-// classic hex grid plays B2/S34: a dead cell is born with exactly 2 live
-// neighbors, a live cell survives with 3 or 4.
+// interactive-only (no formal fixtures), matched to the reference site's
+// exact rules: https://arunarjunakani.github.io/HexagonalGameOfLife/
+//   - a live cell with 0 or 1 neighbors dies from isolation
+//   - a live cell with 3 or more neighbors dies from overpopulation
+//   - a live cell survives ONLY with exactly 2 neighbors
+//   - a dead cell with exactly 2 neighbors is born
 //
 // hint: the app draws odd rows displaced by half a cell, so the neighbors
 // above and below shift by one column depending on the row parity.
-// Reference: https://arunarjunakani.github.io/HexagonalGameOfLife/
 //
 // The rules as machine parts (same shape as JohnConway):
-//   underpopulation (<3) / overpopulation (>4) -> conditions that leave Alive
-//   reproduction (==2)                          -> condition that leaves Dead
+//   isolation (<2) / overpopulation (>2) -> conditions that leave Alive
+//   reproduction (==2)                    -> condition that leaves Dead
 //   survival is implicit: no transition firing means the stay actions run.
 
 // begin solution
 namespace hexagon {
+//namespace {
 class Underpopulation : public Condition {
 public:
   bool Test(const AgentContext& context) override {
-    // todo: implement the underpopulation condition
-    //on the hex grid a live cell is underpopulated below 3 neighboors
-    return context.isAlive && context.aliveNeighbors < 3;
-    // hint: on the hex grid (B2/S34) a live cell is underpopulated below 3 neighbors
-    //throw std::logic_error("Underpopulation condition not implemented yet");
+    // Isolation: a live cell with 0 or 1 neighbors dies (B2/S2 rule).
+    return context.isAlive && context.aliveNeighbors < 2;
   }
 };
 
 class Overpopulation : public Condition {
 public:
   bool Test(const AgentContext& context) override {
-    // todo: implement the overpopulation condition
-    // hint: on the hex grid (B2/S34) a live cell is overpopulated above 4 neighbors
-    //on the hex grid a live cell is overpopulated above 4 heighbors
-    return context.isAlive && context.aliveNeighbors > 4;
-    //throw std::logic_error("Overpopulation condition not implemented yet");
+    // Overpopulation: a live cell with 3 or more neighbors dies (B2/S2 rule) -
+    // this is what makes the cell survive on EXACTLY 2, not a range like 3-4.
+    return context.isAlive && context.aliveNeighbors > 2;
   }
 };
 
@@ -56,7 +54,6 @@ public:
     // hint: on the hex grid (B2/S34) a dead cell is born with exactly 2 neighbors
     //on the hex grid a dead cell is born with exsatcly 2 neighboors
     return !context.isAlive && context.aliveNeighbors == 2;
-    //throw std::logic_error("Reproduction condition not implemented yet");
   }
 };
 
@@ -68,7 +65,6 @@ public:
     //   use the context.world.SetNext() to set the next state of the cell to dead
     //   use the context.position to get the current cell's position
     context.world.SetNext(context.position, false);
-   // throw std::logic_error("Die action not implemented yet");
   }
 };
 
@@ -100,6 +96,8 @@ public:
 };
 }  // namespace hexagon
 
+//}  // namespace
+
 // end solution
 
 HexagonGameOfLife::HexagonGameOfLife() {
@@ -122,24 +120,16 @@ HexagonGameOfLife::HexagonGameOfLife() {
   dead->AddTransition(std::make_shared<Reproduction>(), alive, {born});
   dead->AddAction(std::make_shared<StayDeadAction>());
 
-
-  //SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "HexagonGameOfLife: transitions and actions for alive and dead states not implemented yet");
-
   // end solution
 }
 
 void HexagonGameOfLife::Step(World& world) {
-  // relevant functions:
-  //   world.Height() and world.Width() to get the world dimensions,
-  //   world.Get() reads the CURRENT generation, world.SetNext() writes the NEXT one
-  // Build one context per cell and let the machine decide: conditions read the
-  // current generation through the context, actions write the next one.
+  //relevant functions:
+  //world.Height() and world.Width() to get the world dimensions,
+  //world.Get() reads the CURRENT generation, world.SetNext() writes the next one
+  //Build one context per cell and let the machine decide: conditions read the
+  //current generation through the context, actions write the next one.
   //
-  // note: the double buffering does NOT happen here. Your actions only write
-  // the next buffer via SetNext; the demo app's Manager::step calls
-  // world.SwapBuffers() right AFTER this function returns. Never call
-  // SwapBuffers from inside a rule.
-  // begin solution
   for (int y = 0; y < world.Height(); ++y) {
     for (int x = 0; x < world.Width(); ++x) {
       AgentContext context{world, {x, y}, world.Get({x, y}), CountNeighbors(world, {x, y})};
@@ -182,6 +172,5 @@ int HexagonGameOfLife::CountNeighbors(World& world, Point2D point) {
   }
   return count;
 
-  //throw std::logic_error("CountNeighbors not implemented yet");
   // end solution
 }

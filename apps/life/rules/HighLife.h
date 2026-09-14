@@ -10,7 +10,7 @@
 #include "../fsm/StateMachine.h"
 #include <memory>
 #include <string>
-//Bonus HighLife (B36/S23). Identical machine shape to JohnConway
+//it is a bonus and it is HighLife (B36/S23). and it it the same shape to JohnConway
 //same Underpopulation/Overpopulation conditions, same Die/StayAlive/StayDead
 //actions the only change is Reproduction, which also fires at 6 neighbors.
 //This demonstrates that the FSM design generalizes to rule variants by
@@ -20,7 +20,7 @@ class HighLife : public RuleBase {
 public:
   HighLife();
   ~HighLife() override = default;
-  std::string getName() override { return "HighLife (B36/S23)"; }
+  std::string GetName() override { return "HighLife (B36/S23)"; }
   void Step(World& world) override;
   int CountNeighbors(World& world, Point2D point);
   GameOfLifeTileSetEnum GetTileSet() override { return GameOfLifeTileSetEnum::Square; };
