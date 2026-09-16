@@ -20,7 +20,11 @@ file(
 
 install(FILES ${MAZE_INC} DESTINATION include/maze)
 
-add_executable(maze ${MAZE_SRC} ${MAZE_INC})
+add_executable(maze ${MAZE_SRC} ${MAZE_INC}
+        generators/KruskalExample.cpp
+        generators/KruskalExample.h
+        generators/EllerExample.cpp
+        generators/EllerExample.h)
 
 target_link_libraries(maze PUBLIC core)
 
@@ -45,6 +49,8 @@ if(NOT EMSCRIPTEN)
     generators/RecursiveBacktrackerExample.cpp
     generators/PrimExample.cpp
     generators/HuntAndKillExample.cpp
+    generators/KruskalExample.cpp
+    generators/EllerExample.cpp
   )
   # App-local includes only; core paths are inherited from apps/CMakeLists.txt.
   target_include_directories(maze-tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})

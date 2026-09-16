@@ -2,16 +2,20 @@
 #include "generators/HuntAndKillExample.h"
 #include "generators/RecursiveBacktrackerExample.h"
 #include "generators/PrimExample.h"
+#include "generators/KruskalExample.h"
+#include "generators/EllerExample.h"
 #include <algorithm>
 #include <chrono>
 
-// Dark gray background color for unvisited cells (169, 169, 169)
+//Dark gray background color for unvisited cells (169, 169, 169)
 static const Color32 kDarkGray = {169.0f / 255.0f, 169.0f / 255.0f, 169.0f / 255.0f, 1.0f};
 
 World::World(int size) : width(size), height(size) {
   generators.push_back(new PrimExample());
   generators.push_back(new RecursiveBacktrackerExample());
   generators.push_back(new HuntAndKillExample());
+  generators.push_back(new KruskalExample());
+  generators.push_back(new EllerExample());
 }
 
 World::~World() {
@@ -96,17 +100,17 @@ void World::OnGui() {
 
   ImGui::Text("Generator: %s", generators[generatorId]->GetName().c_str());
   if (ImGui::BeginCombo("##combo",
-                        generators[generatorId]->GetName().c_str()))  // The second parameter is the label previewed before opening the combo.
+                        generators[generatorId]->GetName().c_str()))  //it is the second parameter is the label previewed before opening the combo.
   {
     for (int n = 0; n < (int)generators.size(); n++) {
       bool is_selected = (generators[generatorId]->GetName()
-                          == generators[n]->GetName());  // You can store your selection however you want, outside or inside your objects
+                          == generators[n]->GetName());
       if (ImGui::Selectable(generators[n]->GetName().c_str(), is_selected)) {
         generatorId = n;
         Clear();
       }
       if (is_selected)
-        ImGui::SetItemDefaultFocus();  // You may set the initial focus when opening the combo (scrolling + for keyboard navigation support)
+        ImGui::SetItemDefaultFocus();
     }
     ImGui::EndCombo();
   }
@@ -125,14 +129,14 @@ void World::OnDraw() {
 
   const ImU32 wallColor = IM_COL32(255, 255, 255, 255);
 
-  // Draw walls: each pair (data[i] = north wall, data[i+1] = west wall)
+  //it Draw walls, each pair (data[i] = north wall, data[i+1] = west wall)
   for (int i = 0; i < (int)data.size(); i += 2) {
     float px = (float)((i / 2) % (width + 1)) * linesize + dispX;
     float py = (float)((i / 2) / (width + 1)) * linesize + dispY;
 
-    // north (horizontal line at top of cell)
+    //it is north (horizontal line at top of cell)
     if (data[i]) dl->AddLine(ImVec2(px, py), ImVec2(px + linesize, py), wallColor);
-    // west (vertical line at left of cell)
+    //it iswest (vertical line at left of cell)
     if (data[i + 1]) dl->AddLine(ImVec2(px, py), ImVec2(px, py + linesize), wallColor);
   }
 
@@ -167,8 +171,8 @@ void World::Clear() {
   data.clear();
   data.resize((size_t)(width + 1) * (height + 1) * 2);
   for (int i = 0; i < (int)data.size(); ++i) {
-    if (i % ((width + 1) * 2) == (width + 1) * 2 - 2 ||   // remove north elements on the last column
-        (i / ((width + 1) * 2) == height && i % 2 == 1))  // remove west elements on the last line
+    if (i % ((width + 1) * 2) == (width + 1) * 2 - 2 ||   //it is so that it remove north elements on the last column
+        (i / ((width + 1) * 2) == height && i % 2 == 1))  //it is so that it remove west elements on the last line
       data[i] = false;
     else
       data[i] = true;
