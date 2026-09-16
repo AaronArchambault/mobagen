@@ -10,6 +10,7 @@
 class PrimExample : public MazeGeneratorBase {
 private:
   std::vector<Point2D> toBeVisited;
+  std::map<int, std::map<int, bool>> visited;
   bool initialized = false;
   std::vector<Point2D> getVisitables(World* w, const Point2D& p);
   std::vector<Point2D> getVisitedNeighbors(World* w, const Point2D& p);

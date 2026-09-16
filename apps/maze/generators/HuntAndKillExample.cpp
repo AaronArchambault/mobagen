@@ -46,7 +46,7 @@ bool HuntAndKillExample::Step(World* w) {
   if (!visitables.empty())
   {
     //it picks a random walk/ it keeps moving forward while there is something that is unvisited
-    Point2D next = visitables[Random::Range(0, int(visitables.size()))];
+    Point2D next = visitables[Random::Range(0, int(visitables.size()) - 1)];
     OpenWallsBetween(w, current, next);
     visited[next.y][next.x] = true;
     stack.back() = next;
@@ -63,7 +63,7 @@ bool HuntAndKillExample::Step(World* w) {
   std::vector<Point2D> visitedNeighbors = getVisitedNeighbors(w, huntCell);
   //it makes it so that there are no non-empty one by scaning top-left to bottom right and noting any unvisited cells that are laned on and that must border an
   //alrady visited cell that was in the eilier porcess
-  Point2D linkTo = visitedNeighbors[Random::Range(0, int(visitedNeighbors.size()))];
+  Point2D linkTo = visitedNeighbors[Random::Range(0, int(visitedNeighbors.size()) - 1)];
   OpenWallsBetween(w, huntCell, linkTo);
   visited[huntCell.y][huntCell.x] = true;
   stack.back() = huntCell;
