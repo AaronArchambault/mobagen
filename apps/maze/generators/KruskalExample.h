@@ -1,20 +1,15 @@
-//
-// Created by robert.archambault on 9/16/2026.
-//
-
-#ifndef MOBAGEN_KRUSKALEXAMPLE_H
-#define MOBAGEN_KRUSKALEXAMPLE_H
+#ifndef KRUSKALEXAMPLE_H
+#define KRUSKALEXAMPLE_H
 
 #include "../MazeGeneratorBase.h"
 #include <string>
 #include <vector>
 #include "math/Point2D.h"
 
-//Randomized Kruskal's algorithm: treat every adjacent pair of cells as a
-//candidate "edge" (a wall that could be removed), shuffle them, then walk
-//the shuffled list opening a wall whenever it connects two cells that
-//aren't already joined into the same region. Union-find (disjoint set)
-//tracks which cells are already connected to which.
+//this is randomized kruskal, it treats every adjacent pair of cells as a candidate edge, that being
+//a wall that could get removed, it shuffles them all and then walks the shuffled list, opening a wall
+//whenever it connects two cells that are not already joined into the same region, union find is what
+//keeps track of which cells are already connected to which
 class KruskalExample : public MazeGeneratorBase {
 private:
   struct Edge {
@@ -23,18 +18,17 @@ private:
   };
 
   std::vector<Edge> edges;
-  std::vector<int> parent;  //union-find parent array, indexed by y * width + x
+  std::vector<int> parent;  //it is the union find parent array, indexed by y times width plus x
   bool initialized = false;
 
-  //union-find with path halving + union-by-attach (no rank tracking, kept
-  //simple since maze grids are small enough that this doesn't matter)
+  //it does union find with path halving and just attaches on union, no rank tracking, i kept it
+  //simple since the maze grids are small enough that it does not really matter
   int Find(int i);
   void Union(int a, int b);
   int CellIndex(World* w, const Point2D& p) const;
 
-  //highlight state for the interactive visualization: the pair of cells
-  //from the most recently processed edge, so we can un-highlight them
-  //on the next Step call instead of leaving stray colors behind
+  //this is the highlight state for the interactive part, it is the pair of cells from the last
+  //edge it processed, so it can un highlight them on the next Step instead of leaving stray colors
   Point2D lastHighlightA;
   Point2D lastHighlightB;
   bool hasHighlight = false;
@@ -46,6 +40,4 @@ public:
   void Clear(World* world) override;
 };
 
-
-
-#endif  //MOBAGEN_KRUSKALEXAMPLE_H
+#endif  //KRUSKALEXAMPLE_H

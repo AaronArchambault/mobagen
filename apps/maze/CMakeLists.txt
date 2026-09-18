@@ -24,7 +24,9 @@ add_executable(maze ${MAZE_SRC} ${MAZE_INC}
         generators/KruskalExample.cpp
         generators/KruskalExample.h
         generators/EllerExample.cpp
-        generators/EllerExample.h)
+        generators/EllerExample.h
+        MazeGame.cpp
+        MazeGame.h)
 
 target_link_libraries(maze PUBLIC core)
 
@@ -51,7 +53,8 @@ if(NOT EMSCRIPTEN)
     generators/HuntAndKillExample.cpp
     generators/KruskalExample.cpp
     generators/EllerExample.cpp
-  )
+    MazeGame.cpp
+          )
   # App-local includes only; core paths are inherited from apps/CMakeLists.txt.
   target_include_directories(maze-tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
   target_link_libraries(maze-tests PRIVATE doctest::doctest glm::glm maze_tests_imgui)

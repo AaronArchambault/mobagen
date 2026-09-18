@@ -1,27 +1,25 @@
-//
-// Created by robert.archambault on 9/16/2026.
-//
-
-#ifndef MOBAGEN_ELLEREXAMPLE_H
-#define MOBAGEN_ELLEREXAMPLE_H
+#ifndef ELLEREXAMPLE_H
+#define ELLEREXAMPLE_H
 
 #include "../MazeGeneratorBase.h"
 #include <string>
 #include <vector>
 #include "math/Point2D.h"
 
-//Eller's algorithm: processes the maze one row at a time using union-find
-// to track which cells in the current row are already connected
+//this is eller's algorithm, it processes the maze one row at a time and uses union find to track
+//which cells in the current row are already connected, unlike the other generators here it never
+//needs to look more than one row ahead, it is the standard way people do infinite or streamed mazes
 class EllerExample : public MazeGeneratorBase {
 private:
   int width = 0, height = 0;
   std::vector<int> rowSet;  //it is the set id for each column in the current row
-  std::vector<int> parent;  //it is the union-find parent array
+  std::vector<int> parent;  //it is the union find parent array
   int nextSetId = 0;
   int currentRow = 0;
   bool initialized = false;
 
-  //is is for the visual and is which row was highlighted last, so it can be settled back to the normal path color on the following Step call
+  //this is for the visualization, it tracks which row got highlighted last so it can settle
+  //it back to the normal path color on the next Step
   int lastHighlightedRow = -1;
   bool hasHighlight = false;
 
@@ -35,4 +33,4 @@ public:
   void Clear(World* world) override;
 };
 
-#endif  // MOBAGEN_ELLEREXAMPLE_H
+#endif  // ELLEREXAMPLE_H

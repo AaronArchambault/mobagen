@@ -10,7 +10,7 @@
 class PrimExample : public MazeGeneratorBase {
 private:
   std::vector<Point2D> toBeVisited;
-  std::map<int, std::map<int, bool>> visited;
+  std::map<int, std::map<int, bool>> visited;  //it is naive not optimal, i added it so it can tell what is in the maze from what is just on the frontier
   bool initialized = false;
   std::vector<Point2D> getVisitables(World* w, const Point2D& p);
   std::vector<Point2D> getVisitedNeighbors(World* w, const Point2D& p);
