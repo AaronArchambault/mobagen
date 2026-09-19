@@ -4,6 +4,9 @@
 #include <numeric>
 #include <utility>
 
+//weblog.jamisbuck.org/2011/1/3/maze-generation-kruskal-s-algorithm
+//https://cp-algorithms.com/data_structures/disjoint_set_union.html
+
 namespace {
 void OpenWallBetween(World* w, const Point2D& a, const Point2D& b) {
   Point2D worldA = w->ToWorldCoords(a);

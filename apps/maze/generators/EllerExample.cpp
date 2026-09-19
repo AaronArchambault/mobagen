@@ -3,6 +3,8 @@
 #include "Random.h"
 #include <map>
 
+//weblog.jamisbuck.org/2010/12/29/maze-generation-eller-s-algorithm
+
 namespace {
 void OpenWallBetween(World* w, const Point2D& a, const Point2D& b) {
   Point2D worldA = w->ToWorldCoords(a);

@@ -7,6 +7,17 @@
 
 #include "imgui.h"
 
+//redblobgames.com/pathfinding/a-star/introduction.html
+//github.com/ocornut/imgui
+//en.cppreference.com/w/cpp/container/priority_queue
+//redblobgames.com/pathfinding/a-star/introduction.html#heuristics
+//en.wikipedia.org/wiki/A*_search_algorithm
+//https://stackoverflow.com/questions/18815221/what-is-decltype-and-how-is-it-used
+//https://en.wikipedia.org/wiki/Decltype
+//https://www.geeksforgeeks.org/dsa/a-search-algorithm/
+//https://theory.stanford.edu/~amitp/GameProgramming/AStarComparison.html
+//https://stackoverflow.com/questions/1332466/how-does-dijkstras-algorithm-and-a-star-compare
+
 namespace {
 //walls always get drawn in pure white by World::OnDraw which i did not touch, so the floor needs
 //to be dark for them to actually show up better

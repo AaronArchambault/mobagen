@@ -3,6 +3,8 @@
 #include "Random.h"
 #include <climits>
 
+//weblog.jamisbuck.org/2011/1/24/maze-generation-hunt-and-kill-algorithm
+
 namespace {
 void OpenWallsBetween(World* w, const Point2D& a, const Point2D& b) {
   Point2D worldA = w->ToWorldCoords(a);
