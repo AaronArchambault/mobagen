@@ -19,10 +19,13 @@ private:
 
   std::vector<Edge> edges;
   std::vector<int> parent;  //it is the union find parent array, indexed by y times width plus x
+  //it tracks how many cells are under each root, used for union by size, so Union always attaches
+  //the smaller tree under the bigger one instead of it possibly growing tall in one direction
+  std::vector<int> treeSize;
   bool initialized = false;
 
-  //it does union find with path halving and just attaches on union, no rank tracking, i kept it
-  //simple since the maze grids are small enough that it does not really matter
+  //it does union find with path halving plus union by size now, both together keep the trees
+  //from ever getting tall, so Find stays close to O(1) even on the biggest mazes the slider allows
   int Find(int i);
   void Union(int a, int b);
   int CellIndex(World* w, const Point2D& p) const;

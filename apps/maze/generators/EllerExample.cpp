@@ -1,7 +1,8 @@
 #include "EllerExample.h"
 #include "../World.h"
 #include "Random.h"
-#include <map>
+#include <algorithm>
+#include <utility>
 
 //weblog.jamisbuck.org/2010/12/29/maze-generation-eller-s-algorithm
 
@@ -108,19 +109,26 @@ bool EllerExample::Step(World* w) {
     std::vector<bool> connectDown(width, false);
     for (int x = 0; x < width; x++) connectDown[x] = (Random::Range(0, 1) == 1);
 
-    std::map<int, std::vector<int>> membersByRoot;
-    for (int x = 0; x < width; x++) membersByRoot[Find(rowSet[x])].push_back(x);
+    //it used to build a map keyed by root here, which meant allocating a whole tree structure
+    //every single row just to group up to width many columns, this does the same grouping with
+    //one vector and a sort instead, which is a lot less overhead for how small width actually is
+    std::vector<std::pair<int, int>> rootAndX(width);
+    for (int x = 0; x < width; x++) rootAndX[x] = {Find(rowSet[x]), x};
+    std::sort(rootAndX.begin(), rootAndX.end());
 
-    for (auto& entry : membersByRoot)
+    for (int i = 0; i < width;)
     {
-      const std::vector<int>& members = entry.second;
+      int j = i;
+      while (j < width && rootAndX[j].first == rootAndX[i].first) j++;
+      //[i, j) is now one group, all the same root
       bool anyConnected = false;
-      for (int x : members) anyConnected = anyConnected || connectDown[x];
+      for (int k = i; k < j; k++) anyConnected = anyConnected || connectDown[rootAndX[k].second];
       if (!anyConnected)
       {
-        int pick = members[Random::Range(0, (int)members.size() - 1)];
+        int pick = rootAndX[i + Random::Range(0, j - i - 1)].second;
         connectDown[pick] = true;
       }
+      i = j;
     }
 
     std::vector<int> nextRowSet(width);

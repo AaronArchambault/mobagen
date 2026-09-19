@@ -29,6 +29,9 @@ void OpenWallsBetween(World* w, const Point2D& a, const Point2D& b) {
 const Color32 kPathColor = {1.0f, 1.0f, 1.0f, 1.0f};        //white, it is a cell that settled into the path
 const Color32 kWalkCursorColor = {1.0f, 0.6f, 0.0f, 1.0f};  //orange, it is the normal walk cursor
 const Color32 kHuntCursorColor = {1.0f, 0.0f, 1.0f, 1.0f};  //magenta, it means a hunt jump just happened here
+
+//it turns an x y into a single index into the flat visited vector, y times width plus x
+int VisitedIndex(World* w, int x, int y) { return y * w->GetWidth() + x; }
 }  //namespace
 
 bool HuntAndKillExample::Step(World* w) {
@@ -36,7 +39,7 @@ bool HuntAndKillExample::Step(World* w) {
   if (stack.empty()) {
     Point2D start = randomStartPoint(w);
     if (start.x == INT_MAX) return false;  //it means there are no unvisited cells left so the maze is done
-    visited[start.y][start.x] = true;
+    visited[VisitedIndex(w, start.x, start.y)] = true;
     stack.push_back(start);
     w->SetNodeColor(w->ToWorldCoords(start), kWalkCursorColor);
     return true;
@@ -50,7 +53,7 @@ bool HuntAndKillExample::Step(World* w) {
     //it does a random walk, it keeps carving forward while there is still somewhere unvisited to go
     Point2D next = visitables[Random::Range(0, (int)visitables.size() - 1)];
     OpenWallsBetween(w, current, next);
-    visited[next.y][next.x] = true;
+    visited[VisitedIndex(w, next.x, next.y)] = true;
     w->SetNodeColor(w->ToWorldCoords(current), kPathColor);  //it settles the cell we are leaving
     stack.back() = next;
     w->SetNodeColor(w->ToWorldCoords(next), kWalkCursorColor);  //it highlights the new cursor
@@ -72,40 +75,35 @@ bool HuntAndKillExample::Step(World* w) {
   //has to border an already visited cell that came earlier in the scan
   Point2D linkTo = visitedNeighbors[Random::Range(0, (int)visitedNeighbors.size() - 1)];
   OpenWallsBetween(w, huntCell, linkTo);
-  visited[huntCell.y][huntCell.x] = true;
+  visited[VisitedIndex(w, huntCell.x, huntCell.y)] = true;
   stack.back() = huntCell;
   w->SetNodeColor(w->ToWorldCoords(huntCell), kHuntCursorColor);  //it uses a different color here since a jump just happened
 
   return true;
 }
 void HuntAndKillExample::Clear(World* world) {
-  visited.clear();
+  //it resizes to the current maze size and resets every cell back to unvisited, one allocation
+  //here instead of a bunch of tiny node allocations every time a cell gets touched
+  visited.assign((size_t)world->GetWidth() * world->GetHeight(), false);
   stack.clear();
-
-  for (int i = 0; i < world->GetHeight(); i++)
-  {
-    for (int j = 0; j < world->GetWidth(); j++)
-    {
-      visited[i][j] = false;
-    }
-  }
 }
 Point2D HuntAndKillExample::randomStartPoint(World* world) {
   for (int y = 0; y < world->GetHeight(); y++)
     for (int x = 0; x < world->GetWidth(); x++)
-      if (!visited[y][x]) return {x, y};
+      if (!visited[VisitedIndex(world, x, y)]) return {x, y};
   return {INT_MAX, INT_MAX};
 }
 
 std::vector<Point2D> HuntAndKillExample::getVisitables(World* w, const Point2D& p) {
   std::vector<Point2D> deltas = {{0, -1}, {1, 0}, {0, 1}, {-1, 0}};  //it goes north east south west
   std::vector<Point2D> visitables;
+  visitables.reserve(4);  //it never holds more than 4, so this skips the vector's internal regrows
 
   for (const auto& d : deltas)
   {
     Point2D c = {p.x + d.x, p.y + d.y};
     if (c.x < 0 || c.x >= w->GetWidth() || c.y < 0 || c.y >= w->GetHeight()) continue;
-    if (visited[c.y][c.x]) continue;
+    if (visited[VisitedIndex(w, c.x, c.y)]) continue;
     visitables.push_back(c);
   }
 
@@ -114,12 +112,13 @@ std::vector<Point2D> HuntAndKillExample::getVisitables(World* w, const Point2D& 
 std::vector<Point2D> HuntAndKillExample::getVisitedNeighbors(World* w, const Point2D& p) {
   std::vector<Point2D> deltas = {{-1, 0}, {0, -1}, {1, 0}, {0, 1}};
   std::vector<Point2D> neighbors;
+  neighbors.reserve(4);  //it never holds more than 4, so this skips the vector's internal regrows
 
   for (const auto& d : deltas)
   {
     Point2D c = {p.x + d.x, p.y + d.y};
     if (c.x < 0 || c.x >= w->GetWidth() || c.y < 0 || c.y >= w->GetHeight()) continue;
-    if (visited[c.y][c.x]) neighbors.push_back(c);
+    if (visited[VisitedIndex(w, c.x, c.y)]) neighbors.push_back(c);
   }
 
   return neighbors;

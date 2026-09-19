@@ -5,12 +5,13 @@
 #include <string>
 #include "../MazeGeneratorBase.h"
 #include "math/Point2D.h"
-#include <map>
 
 class PrimExample : public MazeGeneratorBase {
 private:
   std::vector<Point2D> toBeVisited;
-  std::map<int, std::map<int, bool>> visited;  //it is naive not optimal, i added it so it can tell what is in the maze from what is just on the frontier
+  //flat bool per cell indexed by y times width plus x, so it can tell what is in the maze from
+  //what is just on the frontier without the overhead of a map of maps
+  std::vector<bool> visited;
   bool initialized = false;
   std::vector<Point2D> getVisitables(World* w, const Point2D& p);
   std::vector<Point2D> getVisitedNeighbors(World* w, const Point2D& p);
@@ -22,4 +23,4 @@ public:
   void Clear(World* world) override;
 };
 
-#endif  // MOBAGEN_EXAMPLES_MAZE_GENERATORS_PRIMEXAMPLE_H_
+#endif  //MOBAGEN_EXAMPLES_MAZE_GENERATORS_PRIMEXAMPLE_H_

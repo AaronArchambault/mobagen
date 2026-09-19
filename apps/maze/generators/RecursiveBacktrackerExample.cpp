@@ -19,10 +19,15 @@
 namespace {
 const Color32 kPathColor = {1.0f, 1.0f, 1.0f, 1.0f};     //white, it is a cell that settled into the path
 const Color32 kCursorColor = {1.0f, 0.6f, 0.0f, 1.0f};   //orange, it is the current active cell
+
+//it turns an x y into a single index into the flat visited vector, y times width plus x
+int VisitedIndex(World* w, int x, int y) { return y * w->GetWidth() + x; }
 }  //namespace
 
 void RecursiveBacktrackerExample::Clear(World* world) {
-  visited.clear();
+  //it resizes to the current maze size and resets every cell back to unvisited, this only
+  //allocates once here instead of a bunch of tiny node allocations every time a cell is touched
+  visited.assign((size_t)world->GetWidth() * world->GetHeight(), false);
   stack.clear();
   stack.push_back({0, 0});
 }
@@ -31,7 +36,7 @@ bool RecursiveBacktrackerExample::Step(World* w) {
   if (stack.empty()) return false;
 
   Point2D current = stack.back();
-  visited[current.y][current.x] = true;
+  visited[VisitedIndex(w, current.x, current.y)] = true;
   w->SetNodeColor(w->ToWorldCoords(current), kPathColor);  //it settles this cell into the maze
 
   std::vector<Point2D> visitables = getVisitables(w, current);
@@ -82,12 +87,13 @@ std::vector<Point2D> RecursiveBacktrackerExample::getVisitables(World* w, const 
   //the candidates go clockwise starting from the top, up right down left
   std::vector<Point2D> deltas = {{0, -1}, {1, 0}, {0, 1}, {-1, 0}};
   std::vector<Point2D> visitables;
+  visitables.reserve(4);  //it never holds more than 4, so this skips the vector's internal regrows
 
   for (const auto& delta : deltas)
   {
     Point2D candidate = {formalPoint.x + delta.x, formalPoint.y + delta.y};
     if (candidate.x < 0 || candidate.x >= w->GetWidth() || candidate.y < 0 || candidate.y >= w->GetHeight()) continue;
-    if (visited[candidate.y][candidate.x]) continue;
+    if (visited[VisitedIndex(w, candidate.x, candidate.y)]) continue;
     visitables.push_back(candidate);
   }
 

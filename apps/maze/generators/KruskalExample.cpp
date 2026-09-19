@@ -3,6 +3,7 @@
 #include "Random.h"
 #include <numeric>
 #include <utility>
+#include <algorithm>
 
 //weblog.jamisbuck.org/2011/1/3/maze-generation-kruskal-s-algorithm
 //https://cp-algorithms.com/data_structures/disjoint_set_union.html
@@ -46,12 +47,18 @@ int KruskalExample::Find(int i) {
 void KruskalExample::Union(int a, int b) {
   int ra = Find(a);
   int rb = Find(b);
-  if (ra != rb) parent[ra] = rb;
+  if (ra == rb) return;
+  //it attaches the smaller tree under the bigger one, so trees stay flat instead of one growing
+  //tall in a straight line, path halving in Find already helps but this stops the problem at the source
+  if (treeSize[ra] < treeSize[rb]) std::swap(ra, rb);
+  parent[rb] = ra;
+  treeSize[ra] += treeSize[rb];
 }
 
 void KruskalExample::Clear(World* world) {
   edges.clear();
   parent.clear();
+  treeSize.clear();
   initialized = false;
   hasHighlight = false;
 }
@@ -62,9 +69,10 @@ bool KruskalExample::Step(World* w) {
     int width = w->GetWidth();
     int height = w->GetHeight();
 
-    //it starts every cell out as its own region
+    //it starts every cell out as its own region, size 1 each
     parent.resize((size_t)width * height);
     std::iota(parent.begin(), parent.end(), 0);
+    treeSize.assign((size_t)width * height, 1);
 
     //every adjacent pair of cells becomes a candidate edge, it only does east and south so that
     //each wall between two cells only gets listed once
