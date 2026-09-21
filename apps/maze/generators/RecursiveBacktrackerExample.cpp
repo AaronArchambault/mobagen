@@ -98,4 +98,5 @@ std::vector<Point2D> RecursiveBacktrackerExample::getVisitables(World* w, const 
   }
 
   return visitables;
+
 }
