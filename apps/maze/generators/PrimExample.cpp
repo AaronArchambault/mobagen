@@ -23,7 +23,7 @@ void OpenWallBetween(World* w, const Point2D& a, const Point2D& b) {
   }
 }
 
-const Color32 kPathColor = {1.0f, 1.0f, 1.0f, 1.0f};       //white, it means carved into the maze
+const Color32 kPathColor = {1.0f, 1.0f, 1.0f, 1.0f};       //white, it means carved into the maze //w
 const Color32 kFrontierColor = {0.3f, 0.6f, 1.0f, 1.0f};   //light blue, it is on the frontier but not carved in yet
 
 //it turns an x y into a single index into the flat visited vector, y times width plus x
