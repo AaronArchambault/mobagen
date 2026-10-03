@@ -6,9 +6,9 @@
 #include <unordered_set>
 #include "World.h"
 
-//(https://www.redblobgames.com/pathfinding/a-star/introduction.html
+//https://www.redblobgames.com/pathfinding/a-star/introduction.html
 //https://www.redblobgames.com/pathfinding/tower-defense/
-//(https://www.redblobgames.com/grids/hexagons/
+//https://www.redblobgames.com/grids/hexagons/
 //https://www.baeldung.com/cs/graph-number-of-shortest-paths
 //https://benzene.sourceforge.net/benzene-doc/html/classTwoDistance.html
 //https://download.racket-lang.org/docs/5.0/html/games/chat-noir.html
@@ -86,41 +86,58 @@ std::vector<Point2D> Agent::generatePath(CatWorld* w) {
   return path;
 }
 
+//it builds the neighbor table for a board size and keeps it around so it only gets built once
+//it is a big speed up because the old way made a new vector every time it asked for the neighbors of a cell
+const Agent::NeighborTable& Agent::neighborTable(int size) {
+  static NeighborTable table;
+  if (table.size == size) return table;
+
+  const int half = size / 2;
+  table.size = size;
+  table.neighbors.assign(size * size, {});
+  table.border.clear();
+  for (int y = -half; y <= half; ++y)
+    for (int x = -half; x <= half; ++x) {
+      Point2D p = {x, y};
+      int i = index(size, p);
+      std::vector<Point2D> around = CatWorld::neighbors(p);
+      for (int k = 0; k < 6; ++k) table.neighbors[i][k] = inside(size, around[k]) ? index(size, around[k]) : -1;
+      if (std::abs(x) == half || std::abs(y) == half) table.border.push_back(i);
+    }
+  return table;
+}
+
 //it builds the escape map for the whole board with one bfs that starts from every open border cell at the same time
 //it saves how many steps each cell is from the closest exit and how many different shortest ways there are to get out
 //it is so the cat and the catcher can look at the whole board without running a new search from every cell
 Agent::EscapeField Agent::computeEscapeField(int size, const std::vector<bool>& blocked) {
-  const int half = size / 2;
+  const NeighborTable& table = neighborTable(size);
   EscapeField f;
   f.dist.assign(size * size, kUnreachable);
   f.paths.assign(size * size, 0.0);
 
+  //it uses a plain vector as the queue with a read spot so it does not have to make and free memory all the time
+  vector<int> q;
+  q.reserve(size * size);
+
   //it starts every open border cell as an exit with a distance of 0 and 1 way out
-  queue<Point2D> q;
-  for (int y = -half; y <= half; ++y)
-    for (int x = -half; x <= half; ++x) {
-      if (std::abs(x) != half && std::abs(y) != half) continue; //it is not a border cell
-      int i = index(size, {x, y});
-      if (blocked[i]) continue; //it is a blocked border cell so it is not an exit
-      f.dist[i] = 0;
-      f.paths[i] = 1.0;
-      q.push({x, y});
-    }
+  for (int i : table.border) {
+    if (blocked[i]) continue; //it is a blocked border cell so it is not an exit
+    f.dist[i] = 0;
+    f.paths[i] = 1.0;
+    q.push_back(i);
+  }
 
   //it is the normal bfs but it also counts the shortest paths
-  while (!q.empty()) {
-    Point2D cur = q.front();
-    q.pop();
-    int ci = index(size, cur);
-    for (const Point2D& n : CatWorld::neighbors(cur)) {
-      if (!inside(size, n)) continue;
-      int ni = index(size, n);
-      if (blocked[ni]) continue;
+  for (size_t head = 0; head < q.size(); ++head) {
+    int ci = q[head];
+    for (int ni : table.neighbors[ci]) {
+      if (ni < 0 || blocked[ni]) continue; //it is off the board or blocked
       if (f.dist[ni] == kUnreachable) {
         //it is the first time the cell is reached so it gets its distance and copies the path count
         f.dist[ni] = f.dist[ci] + 1;
         f.paths[ni] = f.paths[ci];
-        q.push(n);
+        q.push_back(ni);
       } else if (f.dist[ni] == f.dist[ci] + 1) {
         //it is another shortest way into the same cell so it adds the path count on top
         f.paths[ni] += f.paths[ci];
@@ -133,24 +150,21 @@ Agent::EscapeField Agent::computeEscapeField(int size, const std::vector<bool>& 
 //it counts how many open cells can still be reached from start
 //it is used when there is no way out so the cat and the catcher can tell which area is the biggest
 int Agent::floodFillSize(int size, const std::vector<bool>& blocked, const Point2D& start) {
+  const NeighborTable& table = neighborTable(size);
   vector<bool> seen(size * size, false);
-  queue<Point2D> q;
-  q.push(start);
-  seen[index(size, start)] = true;
-  int count = 0;
-  while (!q.empty()) {
-    Point2D cur = q.front();
-    q.pop();
-    ++count;
-    for (const Point2D& n : CatWorld::neighbors(cur)) {
-      if (!inside(size, n)) continue;
-      int ni = index(size, n);
-      if (blocked[ni] || seen[ni]) continue;
+  vector<int> q;
+  q.reserve(size * size);
+  q.push_back(index(size, start));
+  seen[q[0]] = true;
+
+  for (size_t head = 0; head < q.size(); ++head) {
+    for (int ni : table.neighbors[q[head]]) {
+      if (ni < 0 || blocked[ni] || seen[ni]) continue;
       seen[ni] = true;
-      q.push(n);
+      q.push_back(ni);
     }
   }
-  return count;
+  return static_cast<int>(q.size()); //it is how many cells got reached
 }
 
 //it is the two distance idea that comes from hex game ais
@@ -158,34 +172,28 @@ int Agent::floodFillSize(int size, const std::vector<bool>& blocked, const Point
 //it gives border cells a 0 and every other cell gets 1 plus the second smallest value of its open neighbors
 //it means the smaller the number the faster the cat can force its way out even when the catcher blocks well
 std::vector<int> Agent::computeTwoDistance(int size, const std::vector<bool>& blocked) {
-  const int half = size / 2;
+  const NeighborTable& table = neighborTable(size);
   vector<int> value(size * size, kUnreachable);
   vector<int> settledNeighbors(size * size, 0);
-  queue<Point2D> q;
+  vector<int> q;
+  q.reserve(size * size);
 
   //it starts every open border cell with a value of 0
-  for (int y = -half; y <= half; ++y)
-    for (int x = -half; x <= half; ++x) {
-      if (std::abs(x) != half && std::abs(y) != half) continue;
-      int i = index(size, {x, y});
-      if (blocked[i]) continue;
-      value[i] = 0;
-      q.push({x, y});
-    }
+  for (int i : table.border) {
+    if (blocked[i]) continue;
+    value[i] = 0;
+    q.push_back(i);
+  }
 
   //it settles the cells in order from smallest to biggest just like a bfs
   //it gives a cell its value the moment its second neighbor gets settled because that neighbor has the second smallest value
-  while (!q.empty()) {
-    Point2D cur = q.front();
-    q.pop();
-    int ci = index(size, cur);
-    for (const Point2D& n : CatWorld::neighbors(cur)) {
-      if (!inside(size, n)) continue;
-      int ni = index(size, n);
-      if (blocked[ni] || value[ni] != kUnreachable) continue;
+  for (size_t head = 0; head < q.size(); ++head) {
+    int ci = q[head];
+    for (int ni : table.neighbors[ci]) {
+      if (ni < 0 || blocked[ni] || value[ni] != kUnreachable) continue;
       if (++settledNeighbors[ni] == 2) {
         value[ni] = value[ci] + 1;
-        q.push(n);
+        q.push_back(ni);
       }
     }
   }

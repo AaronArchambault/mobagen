@@ -4,6 +4,7 @@
 #include <glm/glm.hpp>
 #include <functional>
 #include <vector>
+#include <array>
 #include <cstdlib>
 
 // Point2D is now glm::ivec2 — same x,y interface, no OOP wrapper needed.
@@ -52,6 +53,16 @@ protected:
   static std::vector<int> computeTwoDistance(int size, const std::vector<bool>& blocked);
   //it counts how many open cells can be reached from start and it is used when there is no way out
   static int floodFillSize(int size, const std::vector<bool>& blocked, const Point2D& start);
+
+  //it is a lookup table with the six neighbor spots for every cell and a minus one means that neighbor is off the board
+  //it also keeps a list of every border cell so the searches do not have to find them again every time
+  struct NeighborTable {
+    int size = 0;
+    std::vector<std::array<int, 6>> neighbors;
+    std::vector<int> border;
+  };
+  //it builds the table one time for each board size and then just reuses it so the searches stay fast
+  static const NeighborTable& neighborTable(int size);
 };
 
 

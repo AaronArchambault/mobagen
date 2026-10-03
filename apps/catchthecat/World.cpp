@@ -26,7 +26,7 @@ CatWorld::CatWorld(int size) : sideSize_(size) {
 }
 
 CatWorld::CatWorld(int mapSideSize, bool isCatTurn, Point2D catPos, std::vector<bool> map)
-    : sideSize_(mapSideSize), catPosition_(catPos), catTurn_(isCatTurn), worldState_(std::move(map)) {}
+    : catTurn_(isCatTurn), catPosition_(catPos), worldState_(std::move(map)), sideSize_(mapSideSize) {} //it lists them in the same order as the header so the compiler does not warn
 
 void CatWorld::clearWorld() {
   worldState_.clear();
@@ -95,6 +95,7 @@ void CatWorld::step() {
 
   if (catTurn_) {
     auto move = cat_.Move(this);
+    lastMove = move; //it saves the move so headless mode prints the real move instead of 0,0 and the competition reads this line
     if (catCanMoveToPosition(move)) {
       catPosition_ = move;
       catWon_ = catWinVerification();
@@ -104,6 +105,7 @@ void CatWorld::step() {
     }
   } else {
     auto move = catcher_.Move(this);
+    lastMove = move; //it saves the move so headless mode prints the real move instead of 0,0 and the competition reads this line
     if (catcherCanMoveToPosition(move)) {
       worldState_[(move.y + sideSize_ / 2) * sideSize_ + move.x + sideSize_ / 2] = true;
       catcherWon_ = catcherWinVerification();
