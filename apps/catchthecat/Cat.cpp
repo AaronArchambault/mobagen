@@ -32,7 +32,8 @@ Point2D Cat::Move(CatWorld* world) {
   const int size = world->getWorldSideSize();
   const int half = size / 2;
   const Point2D cat = world->getCat();
-  std::vector<bool> blocked = world->worldState(); //it is a working copy that it can change to test moves
+  Grid blocked = toGrid(world->worldState()); //it is a working copy that it can change to test moves
+  const NeighborTable& table = neighborTable(size);
 
   //it builds both maps once so every neighbor can just look up its numbers
   const EscapeField field = computeEscapeField(size, blocked);
@@ -89,18 +90,24 @@ Point2D Cat::Move(CatWorld* world) {
   const CatScore kCaught{kUnreachable + 1, kUnreachable, 0.0, 0};
 
   //it scores a spot for the cat by looking at the best move the cat would have from there
+  //it reuses these two maps for every call so it does not make new memory hundreds of times
+  EscapeField evalField;
+  std::vector<int> evalTwo;
   auto evaluate = [&](const Point2D& catPos) -> CatScore {
     const int ci = index(size, catPos);
-    EscapeField f = computeEscapeField(size, blocked);
-    std::vector<int> two = computeTwoDistance(size, blocked);
+    computeEscapeField(size, blocked, evalField);
+    computeTwoDistance(size, blocked, evalTwo);
+    const int* dist = evalField.dist.data();
+    const double* paths = evalField.paths.data();
+    const int* two = evalTwo.data();
     //it only counts the area when the cat is sealed in because that is the only time it matters
-    int area = f.dist[ci] == kUnreachable ? floodFillSize(size, blocked, catPos) : 0;
+    int area = dist[ci] == kUnreachable ? floodFillSize(size, blocked, catPos) : 0;
     CatScore bestHere = kCaught; //it stays caught if the cat has no open neighbors at all
-    for (const Point2D& n : CatWorld::neighbors(catPos)) {
-      if (!inside(size, n)) continue;
-      int ni = index(size, n);
-      if (blocked[ni]) continue;
-      CatScore s{two[ni], f.dist[ni], f.paths[ni], area};
+    const int* around = table.neighbors.data() + ci * 6; //it uses the neighbor table instead of making a new list of neighbors
+    for (int k = 0; k < 6; ++k) {
+      int ni = around[k];
+      if (ni < 0 || blocked[ni]) continue; //it is off the board or blocked
+      CatScore s{two[ni], dist[ni], paths[ni], area};
       if (s.betterForCat(bestHere)) bestHere = s;
     }
     return bestHere;
@@ -108,23 +115,9 @@ Point2D Cat::Move(CatWorld* world) {
 
   //it is the veto check where it keeps its first choice unless one catcher block would seal the cat in after that move
   //it is because always planning for the worst case made the cat too careful and it did worse so it only looks ahead when there is real danger
-  {
-    const int m0 = index(size, moves[0]);
-    bool danger = false;
-    for (int y = -half; y <= half && !danger; ++y)
-      for (int x = -half; x <= half; ++x) {
-        int ci = index(size, {x, y});
-        if (ci == m0 || blocked[ci]) continue;
-        blocked[ci] = true; //it tries the catcher's block
-        bool sealed = computeEscapeField(size, blocked).dist[m0] == kUnreachable;
-        blocked[ci] = false; //it undoes the block
-        if (sealed) {
-          danger = true;
-          break;
-        }
-      }
-    if (!danger) return moves[0]; //it is safe so it just takes its first choice
-  }
+  //it asks if there are two routes to the edge that do not share a cell because then no single block can seal it in
+  //it used to try all 400 blocks one by one but this gives the exact same answer with just 2 quick searches
+  if (hasTwoSeparateRoutes(size, blocked, index(size, moves[0]))) return moves[0]; //it is safe so it just takes its first choice
 
   //it is the lookahead where it tries each move and then every block the catcher could answer with
   //it is because the catcher will always pick the block that hurts the cat the most so a move is only as good as its worst case

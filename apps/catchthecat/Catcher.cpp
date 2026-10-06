@@ -34,7 +34,8 @@ Point2D Catcher::Move(CatWorld* world) {
   const int half = size / 2;
   const Point2D cat = world->getCat();
   const int catIdx = index(size, cat);
-  std::vector<bool> blocked = world->worldState(); //it is a working copy that it can change to test blocks
+  Grid blocked = toGrid(world->worldState()); //it is a working copy that it can change to test blocks
+  const NeighborTable& table = neighborTable(size);
 
   //it is if the cat already can not escape so it plays the endgame inside the cat's pocket
   //it tries every open cell in the pocket as a block and looks at where the cat would run next
@@ -76,18 +77,24 @@ Point2D Catcher::Move(CatWorld* world) {
 
   //it scores the board from the catcher's side by looking at the best move the cat has on it
   //it is the same score as before so the cat's best move is the one that is the worst for the catcher
+  //it reuses these two maps for every call so it does not make new memory hundreds of times
+  EscapeField evalField;
+  std::vector<int> evalTwo;
   auto evaluate = [&](const Point2D& catPos) -> Score {
     const int ci = index(size, catPos);
-    EscapeField f = computeEscapeField(size, blocked);
-    std::vector<int> two = computeTwoDistance(size, blocked);
+    computeEscapeField(size, blocked, evalField);
+    computeTwoDistance(size, blocked, evalTwo);
+    const int* dist = evalField.dist.data();
+    const double* paths = evalField.paths.data();
+    const int* two = evalTwo.data();
     //it only counts the area when the cat is sealed in because that is the only time it matters
-    int area = f.dist[ci] == kUnreachable ? floodFillSize(size, blocked, catPos) : 0;
+    int area = dist[ci] == kUnreachable ? floodFillSize(size, blocked, catPos) : 0;
     Score reply = kCaught; //it stays caught if the cat has no open neighbors at all
-    for (const Point2D& n : CatWorld::neighbors(catPos)) {
-      if (!inside(size, n)) continue;
-      int ni = index(size, n);
-      if (blocked[ni]) continue;
-      Score s{two[ni], f.dist[ni], f.paths[ni], area};
+    const int* around = table.neighbors.data() + ci * 6; //it uses the neighbor table instead of making a new list of neighbors
+    for (int k = 0; k < 6; ++k) {
+      int ni = around[k];
+      if (ni < 0 || blocked[ni]) continue; //it is off the board or blocked
+      Score s{two[ni], dist[ni], paths[ni], area};
       if (reply.beats(s)) reply = s; //it keeps the move that is the worst for the catcher
     }
     return reply;
@@ -124,7 +131,6 @@ Point2D Catcher::Move(CatWorld* world) {
 
   //it gets the follow up blocks to try after the cat moves to that spot
   //it uses the cells close to the cat because blocking near the cat matters the most and it adds the best cells from the first look so it does not miss a good wall farther away
-  const NeighborTable& table = neighborTable(size);
   auto followUpCells = [&](const Point2D& catPos) {
     std::vector<int> cells;
     std::vector<int> steps(size * size, -1);
@@ -134,7 +140,8 @@ Point2D Catcher::Move(CatWorld* world) {
     for (size_t head = 0; head < cells.size(); ++head) {
       int cur = cells[head];
       if (steps[cur] == kNearSteps) continue;
-      for (int ni : table.neighbors[cur]) {
+      for (int k = 0; k < 6; ++k) {
+        int ni = table.neighbors[cur * 6 + k];
         if (ni < 0 || steps[ni] >= 0) continue;
         steps[ni] = steps[cur] + 1;
         cells.push_back(ni);
@@ -205,6 +212,11 @@ Point2D Catcher::Move(CatWorld* world) {
   }
   return best;
 }
+
+
+
+
+
 
 
 
