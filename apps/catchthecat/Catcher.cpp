@@ -41,7 +41,8 @@ Point2D Catcher::Move(CatWorld* world) {
   //it is if the cat already can not escape so it plays the endgame inside the cat's pocket
   //it tries every open cell in the pocket as a block and looks at where the cat would run next
   //it picks the block where the biggest area the cat can run into is the smallest and if that ties it leaves the cat fewer open neighbors
-  if (computeEscapeField(size, blocked).dist[catIdx] == kUnreachable) {
+  //it uses a star to check if the cat can still reach the edge because it heads straight for the closest edge instead of filling in the whole board
+  if (aStarSteps(size, blocked, catIdx) == kUnreachable) {
     Point2D best = cat;
     int bestRun = kUnreachable, bestExits = kUnreachable;
     for (int y = -half; y <= half; ++y)

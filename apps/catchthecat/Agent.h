@@ -67,6 +67,9 @@ protected:
   //it checks if there are two routes from start to the edge that do not share any cell
   //it is true exactly when no single block can cut the cell off from the edge so it is a fast way to ask if one block could seal the cat in
   static bool hasTwoSeparateRoutes(int size, const Grid& blocked, int start);
+  //it is a star on the byte grid and it gives back the fewest steps from start to the edge or the really big number if there is no way out
+  //it uses the heuristic of how far the cell is from the closest edge so it searches toward the edge first
+  static int aStarSteps(int size, const Grid& blocked, int start);
 
   //it is a lookup table with the six neighbor spots for every cell and a minus one means that neighbor is off the board
   //it stores them in one flat list so the neighbors of cell i are at i times 6 up to i times 6 plus 5
@@ -81,10 +84,3 @@ protected:
 };
 
 #endif  // AGENT_H
-
-
-
-
-
-
-

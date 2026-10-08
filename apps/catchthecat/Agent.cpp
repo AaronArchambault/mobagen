@@ -2,6 +2,7 @@
 #include <climits>
 #include <cstdint>
 #include <queue>
+#include <functional>
 #include <unordered_map>
 #include <unordered_set>
 #include <algorithm>
@@ -18,59 +19,63 @@
 
 using namespace std;
 
-//it gets the neighbors of p that the search can still go to
-//it skips the ones that are off the board or are the cat or are blocked or were already visited or are already waiting in the queue
-static vector<Point2D> getVisitableNeighbors(CatWorld* w, const Point2D& p, const unordered_map<Point2D, bool>& visited, const unordered_set<Point2D>& frontierSet) {
+//it is the a star heuristic which is a guess of how many steps it still takes to get from p to the edge
+//it uses the smaller of how far p is from the left or right edge and how far it is from the top or bottom edge
+//it never guesses too high because every hex step moves at most one column and one row so the real path is never shorter than this
+//it is because the guess is never too high that a star still finds a shortest path just like the bfs did
+static int edgeHeuristic(const Point2D& p, int half) { return std::min(half - std::abs(p.x), half - std::abs(p.y)); }
 
-  vector<Point2D> result;
-  const Point2D catPos = w->getCat();
-  for (const Point2D& n : CatWorld::neighbors(p)) {
-    if (!w->isValidPosition(n)) continue; //it is the outside of the board
-    if (n == catPos) continue; //it is the cat itself
-    if (w->getContent(n)) continue; //it is blocked
-    if (visited.find(n) != visited.end()) continue; //it was already visited
-    if (frontierSet.count(n)) continue; //it is already in the queue
-    result.push_back(n);
-  }
-  return result;
-}
-
-//it finds the shortest path from the cat to the closest open border cell with a breadth first search
+//it finds the shortest path from the cat to the closest open border cell with a star
+//it is like the bfs but the frontier is a priority queue sorted by the steps so far plus the heuristic guess so it searches toward the edge first
 //it gives back the path going from the border to the cat so the front is the border cell and the back is the cell right next to the cat
 //it gives back an empty path if the cat can not get to the border anymore
 std::vector<Point2D> Agent::generatePath(CatWorld* w) {
+  const int half = w->getWorldSideSize() / 2;
 
-  unordered_map<Point2D, Point2D> cameFrom; //it remembers where each cell came from so it can build the flowfield and the path
-  queue<Point2D> frontier; //it stores the next cells to visit
-  unordered_set<Point2D> frontierSet; //it is for optimization so it can check faster if a point is in the queue
+  //it is one entry in the frontier and it holds the cell with its score which is the steps so far plus the heuristic
+  struct Node {
+    int f; //it is the steps so far plus the heuristic guess
+    int g; //it is the steps so far
+    Point2D p;
+    bool operator>(const Node& o) const { return f != o.f ? f > o.f : g < o.g; } //it pops the lowest score first and on ties the one that went the furthest
+  };
+
+  unordered_map<Point2D, Point2D> cameFrom; //it remembers where each cell came from so it can build the path
+  priority_queue<Node, vector<Node>, greater<Node>> frontier; //it stores the next cells to visit with the lowest score on top
+  unordered_map<Point2D, int> costSoFar; //it is the fewest steps found so far to get to each cell
   unordered_map<Point2D, bool> visited; //it uses find to check it because using [] on a missing element would add it and give the wrong results
 
   //it is the bootstrap state so the search starts on the cat
   auto catPos = w->getCat();
-  frontier.push(catPos);
-  frontierSet.insert(catPos);
+  frontier.push({edgeHeuristic(catPos, half), 0, catPos});
+  costSoFar[catPos] = 0;
   Point2D borderExit = {INT32_MAX, INT32_MAX}; //it is the sentinel so it means no border was found yet
 
   while (!frontier.empty()) {
-    //it takes the next cell out of the queue and marks it as visited
-    Point2D current = frontier.front();
+    //it takes the cell with the lowest score out of the queue
+    Node current = frontier.top();
     frontier.pop();
-    frontierSet.erase(current);
-    visited[current] = true;
+    if (visited.find(current.p) != visited.end()) continue; //it is an old copy of a cell that already got a better score
+    visited[current.p] = true;
 
-    for (const Point2D& neighbor : getVisitableNeighbors(w, current, visited, frontierSet)) {
-      //it remembers where the neighbor came from and adds it to the queue
-      cameFrom[neighbor] = current;
-      frontier.push(neighbor);
-      frontierSet.insert(neighbor);
-
-      //it is a bfs on a grid where every step costs the same so the first border it finds is one of the closest ones
-      if (w->catWinsOnSpace(neighbor)) {
-        borderExit = neighbor;
-        break;
-      }
+    //it is when the cell with the lowest score is on the edge so it is a shortest way out and the search stops
+    if (current.p != catPos && w->catWinsOnSpace(current.p)) {
+      borderExit = current.p;
+      break;
     }
-    if (borderExit.x != INT32_MAX) break; //it stops the whole search once a border was found
+
+    for (const Point2D& n : CatWorld::neighbors(current.p)) {
+      if (!w->isValidPosition(n)) continue; //it is the outside of the board
+      if (n == catPos) continue; //it is the cat itself
+      if (w->getContent(n)) continue; //it is blocked
+      if (visited.find(n) != visited.end()) continue; //it was already visited
+      int newCost = current.g + 1; //it is one more step because every step costs the same
+      auto known = costSoFar.find(n);
+      if (known != costSoFar.end() && known->second <= newCost) continue; //it already has a way there that is just as short
+      costSoFar[n] = newCost;
+      cameFrom[n] = current.p;
+      frontier.push({newCost + edgeHeuristic(n, half), newCost, n}); //it adds the heuristic so cells closer to the edge come out first
+    }
   }
 
   //it is if there is no reachable border so the cat is trapped
@@ -85,6 +90,45 @@ std::vector<Point2D> Agent::generatePath(CatWorld* w) {
     current = cameFrom.at(current);
   }
   return path;
+}
+
+//it is the same a star search but on the byte grid with the neighbor table so it is fast enough to use inside the ai every move
+//it gives back how many steps the shortest way from start to the edge takes or the really big number if there is no way out
+//it is used for the question of can the cat still get out because a star heads straight for the closest edge and stops there
+//it is instead of filling in the whole escape map just to read one number from it
+int Agent::aStarSteps(int size, const Grid& blockedGrid, int start) {
+  const NeighborTable& table = neighborTable(size);
+  const int half = size / 2;
+  const int cells = size * size;
+  const unsigned char* blocked = blockedGrid.data();
+  const int* neighbors = table.neighbors.data();
+
+  //it works out the heuristic for a cell from its spot in the grid
+  auto heuristic = [&](int i) { return std::min(half - std::abs(i % size - half), half - std::abs(i / size - half)); };
+
+  static std::vector<int> cost; //it is reused memory for the fewest steps to each cell
+  cost.assign(cells, kUnreachable);
+  //it is the frontier as a priority queue of the score and the cell and the lowest score comes out first
+  std::priority_queue<std::pair<int, int>, std::vector<std::pair<int, int>>, std::greater<std::pair<int, int>>> frontier;
+  cost[start] = 0;
+  frontier.push({heuristic(start), start});
+
+  while (!frontier.empty()) {
+    auto [f, ci] = frontier.top();
+    frontier.pop();
+    if (f - heuristic(ci) > cost[ci]) continue; //it is an old copy of a cell that already got a better score
+    if (heuristic(ci) == 0) return cost[ci]; //it is on the edge and it came out first so this is the shortest way out
+    const int* around = neighbors + ci * 6;
+    for (int k = 0; k < 6; ++k) {
+      int ni = around[k];
+      if (ni < 0 || blocked[ni]) continue; //it is off the board or blocked
+      int newCost = cost[ci] + 1;
+      if (newCost >= cost[ni]) continue; //it already has a way there that is just as short
+      cost[ni] = newCost;
+      frontier.push({newCost + heuristic(ni), ni});
+    }
+  }
+  return kUnreachable; //it ran out of cells so there is no way out
 }
 
 //it turns the world's board into a grid with one byte for each cell
@@ -322,9 +366,3 @@ bool Agent::hasTwoSeparateRoutes(int size, const Grid& blockedGrid, int start) {
   }
   return true;
 }
-
-
-
-
-
-
