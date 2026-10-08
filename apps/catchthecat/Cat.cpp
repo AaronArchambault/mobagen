@@ -6,6 +6,7 @@
 //it is the cat's move and it tries to pick the move that is the hardest for the catcher to stop
 //it ranks every open neighbor by the two distance first then by the normal distance to the closest exit and then by how many shortest ways out it has
 //it then looks ahead by trying each move and checking the catcher's best block in reply and it picks the move that is still the best after that block
+//it is when moves tie it heads away from blocks on the edge because a catcher that builds a fence keeps growing it where its walls already are
 //it is if there is no way out at all then it moves into the biggest open area so it can survive longer
 namespace {
   //it holds the numbers that are used to compare two spots for the cat
@@ -60,12 +61,33 @@ Point2D Cat::Move(CatWorld* world) {
     return count;
   };
 
+  //it finds how many steps every cell is from the closest blocked cell on the edge without caring about other blocks
+  //it is because a catcher that builds a fence along the edge keeps growing it where its walls already are so the cat should head away from them
+  std::vector<int> fence(size * size, kUnreachable);
+  {
+    std::vector<int> q;
+    for (int bi : table.border)
+      if (blocked[bi]) {
+        fence[bi] = 0;
+        q.push_back(bi);
+      }
+    for (size_t head = 0; head < q.size(); ++head)
+      for (int k = 0; k < 6; ++k) {
+        int ni = table.neighbors[q[head] * 6 + k];
+        if (ni >= 0 && fence[ni] == kUnreachable) {
+          fence[ni] = fence[q[head]] + 1;
+          q.push_back(ni);
+        }
+      }
+  }
+
   //it sorts the moves so the best one comes first and it is better if the two distance is lower or if that ties and the normal distance is lower or if that ties too and it has more ways out
   std::stable_sort(moves.begin(), moves.end(), [&](const Point2D& a, const Point2D& b) {
     int ai = index(size, a), bi = index(size, b);
     if (twoDist[ai] != twoDist[bi]) return twoDist[ai] < twoDist[bi];
     if (field.dist[ai] != field.dist[bi]) return field.dist[ai] < field.dist[bi];
     if (field.paths[ai] != field.paths[bi]) return field.paths[ai] > field.paths[bi];
+    if (fence[ai] != fence[bi]) return fence[ai] > fence[bi]; //it is when they tie so it heads away from the fence on the edge
     return room(a) > room(b); //it is when two moves tie on everything so it picks the one with more open cells around it
   });
 
@@ -151,18 +173,3 @@ Point2D Cat::Move(CatWorld* world) {
   }
   return best;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

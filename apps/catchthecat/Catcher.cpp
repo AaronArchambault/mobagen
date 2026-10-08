@@ -7,6 +7,7 @@
 //it scores each block by the move the cat would make next and it wants that move to have a big two distance first then a big normal distance and then as few shortest ways out as it can
 //it is if a few blocks would all seal the cat in then it picks the one that leaves the cat the smallest area so the game ends faster
 //it looks ahead on the 5 best blocks by checking the cat's 2 best replies and the catcher's best follow up to each one and it picks the block with the best worst case
+//it is once the cat can not force its way out it seals the cat in close by instead of building a big wall far away
 //it is once the cat is sealed off it just closes in on the cat by blocking its neighbors
 namespace {
   //it holds the numbers that are used to compare two blocks
@@ -192,6 +193,41 @@ Point2D Catcher::Move(CatWorld* world) {
     }
     return worst;
   };
+
+  //it is the closing in part for when the cat can not force its way out anymore after the best block
+  //it is because once that happens making the cat's distance to the edge bigger just builds a huge wall far away and a cat that stalls in the middle can drag the game on for over a hundred moves
+  //it switches to sealing the cat in close by so the pocket is small and the game ends fast
+  if (ranked[0].first.twoDist == kUnreachable) {
+    //it finds how many steps every cell is from the cat without caring about blocks
+    std::vector<int> stepsFromCat(size * size, -1);
+    {
+      std::vector<int> q{catIdx};
+      stepsFromCat[catIdx] = 0;
+      for (size_t head = 0; head < q.size(); ++head)
+        for (int k = 0; k < 6; ++k) {
+          int ni = table.neighbors[q[head] * 6 + k];
+          if (ni >= 0 && stepsFromCat[ni] < 0) {
+            stepsFromCat[ni] = stepsFromCat[q[head]] + 1;
+            q.push_back(ni);
+          }
+        }
+    }
+    //it lists the blocks that still keep the cat from forcing its way out and puts the ones closest to the cat first
+    std::vector<Point2D> safe;
+    for (const auto& r : ranked)
+      if (r.first.twoDist == kUnreachable) safe.push_back(r.second);
+    std::stable_sort(safe.begin(), safe.end(), [&](const Point2D& a, const Point2D& b) { return stepsFromCat[index(size, a)] < stepsFromCat[index(size, b)]; });
+    //it checks the closest ones with the lookahead and takes the first one where the cat still can not force its way out
+    //it is the safety check that stops it from chasing the cat while the cat can still get away which is what made the old close tiebreak lose games
+    for (int k = 0; k < kTopBlocks && k < static_cast<int>(safe.size()); ++k) {
+      int bi = index(size, safe[k]);
+      blocked[bi] = true; //it tries the block
+      Score worst = worstCase();
+      blocked[bi] = false; //it undoes the block
+      if (worst.twoDist >= kUnreachable) return safe[k];
+    }
+    //it is if none of them pass the check so it just plays the normal way below
+  }
 
   //it is the lookahead where it plays out the 5 best blocks and picks the one with the best worst case
   //it is because the cat will always pick the reply that hurts the catcher the most so a block is only as good as its worst case
